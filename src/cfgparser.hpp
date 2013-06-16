@@ -22,7 +22,6 @@ struct StringHashFunc{
 #endif
 
 #include "strutils.hpp"
-#include "config.h"
 
 namespace ltp { //LTP_NAMESPACE_BEGIN
 namespace utility { //LTP_UTILITY_NAMESPACE_BEGIN
