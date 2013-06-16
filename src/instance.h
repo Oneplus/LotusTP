@@ -25,6 +25,42 @@ public:
     size_t size() const {
         return forms.size();
     }
+
+    int num_errors(bool ignore_punctation = true) const {
+        if (predicted_heads.size() == 0) {
+            return -1;
+        }
+
+        int ret = 0;
+        int len = size();
+        for (int i = 1; i < len; ++ i) {
+            if (ignore_punctation && postags[i] == "wp") {
+                continue;
+            }
+
+            if (predicted_heads[i] != heads[i]) {
+                ++ ret;
+            }
+        }
+
+        return ret;
+    }
+
+    int num_rels(bool ignore_punctation = true) const {
+        if (!ignore_punctation) {
+            return forms.size() - 1;
+        } else {
+            int ret = 0;
+            int len = size();
+            for (int i = 1; i < len; ++ i) {
+                if (postags[i] != "wp") {
+                    ++ ret;
+                }
+            }
+            return ret;
+        }
+        return -1;
+    }
 public:
 
     vector<string>  forms;      /* */
@@ -49,6 +85,10 @@ public:
 
     Mat3<FeatureVector *>   labeled_dependency_features;
     Mat3<double>            labeled_dependency_scores;
+
+    vector<int>         verb_cnt;
+    vector<int>         conj_cnt;
+    vector<int>         punc_cnt;
 };  // end for class Instance
 }   // end for namespace parser
 }   // end for namespace ltp
