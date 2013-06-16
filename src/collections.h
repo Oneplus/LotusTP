@@ -45,17 +45,20 @@ public:
     int retrieve(const char * key, bool create) {
         int val = 0;
         if (database.contains(key)) {
-            database.get(key, val);
+            database.unsafe_get(key, val);
             return val;
         } else {
             if (create) {
-                val = collections->idx ++;
-                database.set(key, val);
+                val = collections->idx;
+                database.unsafe_set(key, val);
+                collections->idx ++;
                 return val;
             } else {
                 return -1;
             }
         }
+
+        return -1;
     }
 };
 

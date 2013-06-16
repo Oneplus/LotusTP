@@ -124,6 +124,20 @@ public:
         return true;
     }
 
+    void unsafe_set(const char * key, const T &val ) {
+        int len = 0;
+        for (; key[len] != 0; ++ len);
+
+        char * new_key = (char *) malloc( (len + 1) * sizeof(char) );
+        for (int i = 0; i < len; ++ i) {
+            new_key[i] = key[i];
+        }
+
+        new_key[len] = 0;
+        _map[new_key] = val;
+
+    }
+
     bool overwrite( const char * key, const T &val ) {
         if (contains(key)) {
             iterator it = _map.find(key);
@@ -154,6 +168,10 @@ public:
         }
 
         return NULL;
+    }
+
+    void unsafe_get( const char * key, T& val) {
+        val = _map.find(key)->second;
     }
 
     bool contains( const char * key ) const {
