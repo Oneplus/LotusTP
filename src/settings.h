@@ -29,6 +29,7 @@ const string FSEP           =   "-";
 
 const double DOUBLE_POS_INF =   1e20;
 const double DOUBLE_NEG_INF =   -1e20;
+const double EPS            =   1e-10;
 
 const size_t CMP            =   0;
 const size_t INCMP          =   1;
