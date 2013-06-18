@@ -14,6 +14,7 @@ struct TrainOptions {
     int     max_iter;               /*< the iteration number */
     // training algorithm parameter
     string  algorithm;              /*< the algorithm */
+    string  model_name;             /*< the model name */
     bool    conservative_update;    /*< conservative update */
 };
 
@@ -32,6 +33,8 @@ struct FeatureOptions {
     bool use_dependency_bigram;
     bool use_dependency_surrounding;
     bool use_dependency_between;
+
+    // automaticall calculate
     bool use_distance_in_dependency_features;
     bool use_unlabeled_dependency;
     bool use_labeled_dependency;

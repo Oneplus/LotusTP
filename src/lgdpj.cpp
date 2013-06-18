@@ -6,7 +6,7 @@
  */
 
 #include <iostream>
-#include "config.h"
+// #include "config.h"
 #include "cfgparser.hpp"
 #include "logging.hpp"
 #include "parser.h"
@@ -16,7 +16,7 @@ using namespace ltp::parser;
 using namespace ltp::utility;
 
 void usage(const char * msg) {
-    cerr << "lgdpj(lightweight)" << VERSION << " --- {lzh}@ir.hit.edu.cn" << endl;
+    // cerr << "lgdpj(lightweight)" << VERSION << " --- {lzh}@ir.hit.edu.cn" << endl;
     cerr << endl;
     cerr << msg << endl;
 

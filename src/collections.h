@@ -75,13 +75,13 @@ Dictionary * DictionaryCollections::create_dict(const char * name) {
 
 void DictionaryCollections::dump(ostream & out) {
     for (int i = 0; i < dicts.size(); ++ i) {
-        out << dicts[i]->dict_name << ": {" << endl;
+        out << dicts[i]->dict_name << ":{";
         for (StringMap<int>::const_iterator itx = dicts[i]->database.begin();
                 itx != dicts[i]->database.end();
                 ++ itx) {
-            out << "    " << itx->first << ":\t" << itx->second << "," << endl;
+            out << itx->first << ":" << itx->second << ",";
         }
-        out << "}" << endl;
+        out << "},";
     }
 }
 

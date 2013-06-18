@@ -58,22 +58,27 @@ public:
     }
 
     void add(const SparseVec &other,
-            const double scale = 1.0) {
+            const double scale) {
         for (const_iterator itx = other.begin();
                 itx != other.end(); ++ itx) {
             int idx = itx->first;
+            if (_vec.find(idx) == _vec.end()) _vec[idx] = 0.;
             _vec[idx] += (scale * itx->second);
         }
     }
 
     void add(const FeatureVector * other,
-            const double scale = 1.0) {
+            const double scale) {
+        if (!other) {
+            return;
+        }
         int n = other->n;
         const int * idx = other->idx;
         const double * val = other->val;
 
         if (val == NULL) {
             for (int i = 0; i < n; ++ i) {
+                if (_vec.find(idx[i]) == _vec.end()) _vec[idx[i]] = 0.;
                 _vec[idx[i]] += scale;
             }
         } else {

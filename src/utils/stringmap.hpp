@@ -56,14 +56,18 @@ typedef struct CharArrayHashFunc {
      * hash function from Mihai
      */
     size_t operator() (const char * s) const {
-        int hashTemp = 0;
+        /*int hashTemp = 0;
 
         for (unsigned int i = 0; s[i]; ++ i) {
             if (0 > hashTemp) hashTemp = (hashTemp << 1) + 1;
             else hashTemp = hashTemp << 1;
             hashTemp ^= s[i];
-        }
+        }*/
 
+        unsigned int hashTemp = 0;
+        while (*s) {
+            hashTemp = hashTemp * 101 + *s ++;
+        }
         return (size_t(hashTemp));
     }
 

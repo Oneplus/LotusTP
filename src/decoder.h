@@ -22,7 +22,6 @@ public:
     const LatticeItem * const _right;
 
     const double _prob;
-    const list<const FeatureVector *> _fvs;
 
 public:
     LatticeItem(const int comp,
@@ -30,7 +29,6 @@ public:
             const int s,
             const int t,
             const double prob,
-            const list<const FeatureVector *>& fvs,
             const LatticeItem * const left,
             const LatticeItem * const right) : 
         _g(g),
@@ -40,14 +38,12 @@ public:
         _prob(prob),
         _left(left),
         _right(right),
-        _fvs(fvs),
         _label_s_t(-1) { }
 
     LatticeItem(const int comp,
             const int s,
             const int t,
             const double prob,
-            const list<const FeatureVector *>& fvs,
             const LatticeItem * const left,
             const LatticeItem * const right,
             const int label_s_t = -1) : 
@@ -58,7 +54,6 @@ public:
         _prob(prob),
         _left(left),
         _right(right),
-        _fvs(fvs),
         _label_s_t(label_s_t) { }
 
     // for span like C^g(s,s)
@@ -69,7 +64,6 @@ public:
         _t(s),
         _prob(0.0),
         _comp(CMP),
-        _fvs(),
         _left(0),
         _right(0),
         _label_s_t(-1) { }
@@ -79,7 +73,6 @@ public:
         _t(s),
         _prob(0.0),
         _comp(CMP),
-        _fvs(),
         _left(0),
         _right(0),
         _g(-1),
@@ -94,7 +87,6 @@ private:
         _t(0),
         _prob(0.0),
         _comp(-1),
-        _fvs(list<const FeatureVector *>()),
         _left(0),
         _right(0),
         _label_s_t(-1),
@@ -130,7 +122,7 @@ protected:
     void lattice_insert(const LatticeItem * &position, const LatticeItem * const item) {
         if (position == NULL) {
             position = item;
-        } else if (position->_prob < item->_prob) {
+        } else if (position->_prob < item->_prob - EPS) {
             delete position;
             position = item;
         } else {

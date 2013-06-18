@@ -85,6 +85,7 @@ private:
         train_opt.holdout_file      = "";
         train_opt.max_iter          = 10;
         train_opt.algorithm         = "pa";
+        train_opt.model_name        = "";
 
         if (cfg.has_section("train")) {
             TRACE_LOG("train model specified.");
@@ -108,6 +109,14 @@ private:
                 train_opt.algorithm = strbuf;
             } else {
                 WARNING_LOG("algorithm is not configed, [PA] is set as default.");
+            }
+
+            train_opt.model_name = train_opt.train_file + "." + train_opt.algorithm + ".model";
+            if (cfg.get("train", "model-name", strbuf)) {
+                train_opt.model_name = strbuf;
+            } else {
+                WARNING_LOG("model name is not configed, [%s] is set as default",
+                        train_opt.model_name.c_str());
             }
 
             if (cfg.get_integer("train", "max-iter", intbuf)) {
@@ -240,6 +249,11 @@ private:
                 dat[i]->dependency_features.resize(len, len);
                 dat[i]->dependency_scores.resize(len, len);
 
+                vector<string>  cache;
+                vector<int>     cache_again;
+
+                cache.reserve(100);
+
                 for (int hid = 0; hid < len; ++ hid) {
                     for (int cid = 1; cid < len; ++ cid) {
                         dat[i]->dependency_features[hid][cid] = NULL;
@@ -249,9 +263,8 @@ private:
                             continue;
                         }
 
-                        vector<string>  cache;
-                        vector<int>     cache_again;
-
+                        cache.clear();
+                        cache_again.clear();
                         extractor.extract2o(dat[i],
                                 hid,
                                 cid,
@@ -407,6 +420,9 @@ private:
             }
 
             model->param.flush( train_dat.size() * (iter + 1) );
+
+            ofstream fout((train_opt.model_name + "." + to_str(iter) + ".model").c_str());
+            model->save(fout);
 
             int head_correct = 0;
             int label_correct = 0;

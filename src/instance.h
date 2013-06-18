@@ -2,10 +2,10 @@
 #define __INSTANCE_H__
 
 #include <iostream>
+#include <set>
 
 #include "mat.h"
 #include "sparsevec.h"
-
 #include "featurevec.h"
 
 namespace ltp {
@@ -86,9 +86,9 @@ public:
     Mat3<FeatureVector *>   labeled_dependency_features;
     Mat3<double>            labeled_dependency_scores;
 
-    vector<int>         verb_cnt;
-    vector<int>         conj_cnt;
-    vector<int>         punc_cnt;
+    vector<int>             verb_cnt;
+    vector<int>             conj_cnt;
+    vector<int>             punc_cnt;
 };  // end for class Instance
 }   // end for namespace parser
 }   // end for namespace ltp

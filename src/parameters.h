@@ -49,25 +49,26 @@ public:
         }
     }
 
-    double operator[] (int idx) const{
+    /*double operator[] (int idx) const{
         return _W_sum[idx];
-    }
+    }*/
 
     void add(const SparseVec & vec, int now, double scale = 1.) {
         for (SparseVec::const_iterator itx = vec.begin();
                 itx != vec.end();
                 itx ++) {
             int idx = itx->first;
+            int elapsed = now - _W_time[idx];
             double upd = scale * itx->second;
             double cur_val = _W[idx];
-            int elapsed = now - _W_time[idx];
-            _W[idx] = cur_val + upd;
-            _W_sum[idx] += elapsed * cur_val + upd;
-            _W_time[idx] = now;
+
+            _W[idx]         = cur_val + upd;
+            _W_sum[idx]    += elapsed * cur_val + upd;
+            _W_time[idx]    = now;
         }
     }
 
-    double dot(const SparseVec & vec, bool use_avg = true) const {
+    double dot(const SparseVec & vec, bool use_avg = false) const {
         const double * const p = (use_avg ? _W_sum : _W);
         double ret = 0.;
         for (SparseVec::const_iterator itx = vec.begin();
@@ -78,7 +79,7 @@ public:
         return ret;
     }
 
-    double dot(const FeatureVector * vec, bool use_avg = true) const {
+    double dot(const FeatureVector * vec, bool use_avg = false) const {
         const double * const p = (use_avg ? _W_sum : _W);
         double ret = 0.;
         for (int i = 0; i < vec->n; ++ i) {
@@ -114,6 +115,20 @@ public:
             }
         }
         out << endl;
+    }
+
+    void flush(int now) {
+        for(int i = 0; i < _dim; ++i) {
+            _W_sum[i] += (now - _W_time[i]) * _W[i];
+            _W_time[i] = now;
+        }
+    }
+
+    void dump(ostream & out, bool use_avg = true) {
+        const double * const p = (use_avg ? _W_sum : _W);
+        for (int i = 0; i < _dim; ++ i) {
+            out << i << ":" << p[i] << ",";
+        }
     }
 };
 

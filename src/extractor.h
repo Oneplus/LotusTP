@@ -26,7 +26,7 @@ using namespace ltp::strutils;
 
 #define PUSH_DIST(x) do { \
     if (feat_opt.use_distance_in_dependency_features) { \
-        (x) = ((x) + dist); \
+        (x).append(dist); \
         PUSH(x);    \
     } \
 } while (0);
@@ -280,9 +280,9 @@ public:
 
         if (feat_opt.use_dependency_surrounding) {
             const string &phL1 = (hid <= 1) ? NONE_POSTAG : inst->postags[hid - 1];
-            const string &phR1 = (is_root || hid+1 >= inst->size()) ? NONE_POSTAG : inst->postags[hid + 1];
+            const string &phR1 = (is_root || hid+1 >= len) ? NONE_POSTAG : inst->postags[hid + 1];
             const string &pcL1 = (cid <= 1) ? NONE_POSTAG : inst->postags[cid - 1];
-            const string &pcR1 = (cid + 1 >= inst->size()) ? NONE_POSTAG : inst->postags[cid +1];
+            const string &pcR1 = (cid + 1 >= len) ? NONE_POSTAG : inst->postags[cid +1];
 
             paste(feat, "14=", ph, FSEP, phR1, FSEP, pc, FSEP, dir);                PUSH(feat); PUSH_DIST(feat);
             paste(feat, "15=", ph, FSEP, pcL1, FSEP, pc, FSEP, dir);                PUSH(feat); PUSH_DIST(feat);
@@ -303,11 +303,11 @@ public:
                 paste(feat, "15C=", cph, FSEP, cpcL1, FSEP, cpc, FSEP, dir);        PUSH(feat); PUSH_DIST(feat);
                 paste(feat, "16C=", cph, FSEP, cpc, FSEP, cpcR1, FSEP, dir);        PUSH(feat); PUSH_DIST(feat);
                 paste(feat, "17C=", cph, FSEP, cphR1, FSEP, cpcL1, FSEP, cpc, FSEP, dir);  PUSH(feat); PUSH_DIST(feat);
-                feat = "18C=" + cphL1 + FSEP + cphR1 + FSEP + cpcL1 + FSEP + cpc + FSEP + dir;  PUSH(feat); PUSH_DIST(feat);
-                feat = "19C=" + cph + FSEP + cphR1 + FSEP + cpc + FSEP + cpcR1 + FSEP + dir;     PUSH(feat); PUSH_DIST(feat);
-                feat = "20C=" + cphL1 + FSEP + cph + FSEP + cpcL1 + FSEP + cpc + FSEP + dir;    PUSH(feat); PUSH_DIST(feat);
-                feat= "?20C=" + cphL1 + FSEP + cph + FSEP + cphR1 + FSEP + cpc + FSEP + dir;    PUSH(feat); PUSH_DIST(feat);
-                feat= "?19C=" + cph + FSEP + cpcL1 + FSEP + cpc + FSEP + cpcR1 + FSEP + dir;    PUSH(feat); PUSH_DIST(feat);
+                paste(feat, "18C=", cphL1, FSEP, cphR1, FSEP, cpcL1, FSEP, cpc, FSEP, dir); PUSH(feat); PUSH_DIST(feat);
+                paste(feat, "19C=", cph, FSEP, cphR1, FSEP, cpc, FSEP, cpcR1, FSEP, dir);  PUSH(feat); PUSH_DIST(feat);
+                paste(feat, "20C=", cphL1, FSEP, cph, FSEP, cpcL1, FSEP, cpc, FSEP, dir);  PUSH(feat); PUSH_DIST(feat);
+                paste(feat, "?20C=", cphL1, FSEP, cph, FSEP, cphR1, FSEP, cpc, FSEP, dir); PUSH(feat); PUSH_DIST(feat);
+                paste(feat, "?19C=", cph, FSEP, cpcL1, FSEP, cpc, FSEP, cpcR1, FSEP, dir); PUSH(feat); PUSH_DIST(feat);
             }
         }   //  end for if (feat_opt.use_dependency_surrounding)
 

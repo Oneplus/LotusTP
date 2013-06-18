@@ -23,11 +23,11 @@ protected:
         _lattice_cmp.resize(len, len);
         _lattice_incmp.resize(len, len, L);
 
+        _lattice_cmp = NULL;
+        _lattice_incmp = NULL;
+
         for (int i = 0; i < len; ++ i) {
             _lattice_cmp[i][i] = new LatticeItem(i);
-            for (int l = 0; l < L; ++ l) {
-                _lattice_incmp[i][i][l] = NULL;
-            }
         }
     }
 
@@ -59,16 +59,13 @@ protected:
                     for (int l = 0; l < L; ++ l) {
 
                         {   // I(s,t) = C(s,r) + C(t,r+1)
-                            list<const FeatureVector *> fvs;
                             double prob = (left->_prob + right->_prob);
 
                             if (feat_opt.use_unlabeled_dependency) {
-                                // fvs.push_back(inst->dependency_features[s][t]);
                                 prob += inst->dependency_scores[s][t];
                             }
 
                             if (feat_opt.use_labeled_dependency) {
-                                // fvs.push_back( inst->labeled_dependency_features[s][t][l] );
                                 prob += inst->labeled_dependency_scores[s][t][l];
                             }
 
@@ -85,7 +82,6 @@ protected:
                                     s,
                                     t,
                                     prob,
-                                    fvs,
                                     left,
                                     right,
                                     l);
@@ -95,16 +91,13 @@ protected:
                         }
 
                         if (s != 0) {   // I(t,s)
-                            list<const FeatureVector *> fvs;
                             double prob = (left->_prob + right->_prob);
 
                             if (feat_opt.use_unlabeled_dependency) {
-                                // fvs.push_back(inst->dependency_features[t][s]);
                                 prob += inst->dependency_scores[t][s];
                             }
 
                             if (feat_opt.use_labeled_dependency) {
-                                // fvs.push_back(inst->labeled_dependency_features[t][s][l]);
                                 prob += inst->labeled_dependency_scores[t][s][l];
                             }
 
@@ -118,7 +111,6 @@ protected:
                                     t,
                                     s,
                                     prob,
-                                    fvs,
                                     left,
                                     right,
                                     l);
@@ -143,12 +135,10 @@ protected:
                             }
 
                             const double prob = left->_prob + right->_prob;
-                            list<const FeatureVector *> fvs;
                             const LatticeItem * const item = new LatticeItem(CMP,
                                     s,
                                     t,
                                     prob,
-                                    fvs,
                                     left,
                                     right);
 
@@ -157,7 +147,7 @@ protected:
                         }
                     }   //  end for if (r != s)
 
-                    if (r != t && s != 0) { // C(t,s) = I(t,r) = C(r,s)
+                    if (r != t && s != 0) { // C(t,s) = I(t,r) + C(r,s)
                         const LatticeItem * const left = _lattice_cmp[r][s];
                         if (!left) {
                             continue;
@@ -170,12 +160,10 @@ protected:
                             }
 
                             const double prob = left->_prob + right->_prob;
-                            list<const FeatureVector *> fvs;
                             const LatticeItem * const item = new LatticeItem(CMP,
                                     t,
                                     s,
                                     prob,
-                                    fvs,
                                     left,
                                     right);
 
@@ -190,7 +178,10 @@ protected:
 
     void get_result(Instance * inst) {
         int len = inst->size();
-        inst->predicted_heads.resize(len);
+        inst->predicted_heads.resize(len, -1);
+        for (int i = 0; i < len; ++ i) {
+            inst->predicted_heads[i] = -1;
+        }
 
         if (model_opt.labeled) {
             inst->predicted_deprels.resize(len);
