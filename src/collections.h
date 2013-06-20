@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "stringmap.hpp"
+#include "smartmap.hpp"
 
 namespace ltp {
 namespace parser {
@@ -19,7 +20,8 @@ public:
     ~DictionaryCollections() {}
 
     Dictionary * create_dict(const char * name);
-    void dump(ostream& out);
+    void dump(ostream & out);
+    bool load(istream & in);
 
     size_t dim() const {
         return idx;
@@ -39,18 +41,21 @@ public:
         collections(coll) {}
 
     string                  dict_name;
-    StringMap<int>          database;
+    //StringMap<int>          database;
+    SmartMap<int>           database;
     DictionaryCollections * collections;
 
     int retrieve(const char * key, bool create) {
         int val = 0;
         if (database.contains(key)) {
-            database.unsafe_get(key, val);
+            // database.unsafe_get(key, val);
+            database.get(key, val);
             return val;
         } else {
             if (create) {
                 val = collections->idx;
-                database.unsafe_set(key, val);
+                database.set(key, val);
+                // database.unsafe_set(key, val);
                 collections->idx ++;
                 return val;
             } else {
@@ -74,15 +79,42 @@ Dictionary * DictionaryCollections::create_dict(const char * name) {
 }
 
 void DictionaryCollections::dump(ostream & out) {
+    char chunk[32];
+    unsigned int sz = dicts.size();
+    strncpy(chunk, "collections", 16);
+
+    out.write(chunk, 16);
+    out.write(reinterpret_cast<const char *>(&sz), sizeof(unsigned int));
     for (int i = 0; i < dicts.size(); ++ i) {
-        out << dicts[i]->dict_name << ":{";
-        for (StringMap<int>::const_iterator itx = dicts[i]->database.begin();
-                itx != dicts[i]->database.end();
-                ++ itx) {
-            out << itx->first << ":" << itx->second << ",";
-        }
-        out << "},";
+        strncpy(chunk, dicts[i]->dict_name.c_str(), 32);
+        out.write(chunk, 32);
+
+        dicts[i]->dump(out);
     }
+}
+
+bool DictionaryCollections::load(istream & in) {
+    char chunk[32];
+    unsigned int sz;
+
+    in.read(chunk, 16);
+    if (strcmp(chunk, "collections")) {
+        return false;
+    }
+
+    in.read(reinterpret_cast<char *>(&sz), sizeof(unsigned int));
+    for (int i = 0; i < sz; ++ i) {
+        in.read(chunk, 32);
+
+        Dictionary * dict = create_dict(chunk);
+        if (!dict->load(in)) {
+            return false;
+        }
+
+        dicts.push_back(dict);
+    }
+
+    return true;
 }
 
 }       //  end for namespace parser

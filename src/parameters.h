@@ -1,8 +1,13 @@
 #ifndef __PARAMETERS_H__
 #define __PARAMETERS_H__
 
+#include "sparsevec.h"
+#include "featurevec.h"
+
 namespace ltp {
 namespace parser {
+
+using namespace ltp::math;
 
 class Parameters {
 public:
@@ -49,10 +54,6 @@ public:
         }
     }
 
-    /*double operator[] (int idx) const{
-        return _W_sum[idx];
-    }*/
-
     void add(const SparseVec & vec, int now, double scale = 1.) {
         for (SparseVec::const_iterator itx = vec.begin();
                 itx != vec.end();
@@ -92,13 +93,6 @@ public:
         return ret;
     }
 
-
-    void divide(double denomitor) {
-        for (int i = 0; i < _dim; ++ i) {
-            _W[i] = _W[i] / denomitor;
-        }
-    }
-
     void str(ostream& out, int width = 10) {
         out << "\t";
         for (int i = 0; i < width; ++ i) {
@@ -125,10 +119,26 @@ public:
     }
 
     void dump(ostream & out, bool use_avg = true) {
-        const double * const p = (use_avg ? _W_sum : _W);
-        for (int i = 0; i < _dim; ++ i) {
-            out << i << ":" << p[i] << ",";
+        const double * p = (use_avg ? _W_sum : _W);
+        char chunk[16] = {'p', 'a', 'r', 'a', 'm', 0};
+        out.write(chunk, 16);
+        out.write(reinterpret_cast<const char *>(&_dim), sizeof(int));
+        out.write(reinterpret_cast<const char *>(p), sizeof(double) * _dim);
+    }
+
+    bool load(istream & in) {
+        char chunk[16];
+        in.read(chunk, 16);
+        if (strcmp(chunk, "param")) {
+            return false;
         }
+
+        in.read(reinterpret_cast<char *>(&_dim), sizeof(int));
+        _W = new double[_dim];
+        in.read(reinterpret_cast<char *>(_W), sizeof(double) * _dim);
+        _W_sum = _W;
+
+        return true;
     }
 };
 

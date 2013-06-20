@@ -205,6 +205,7 @@ private:
     }
 
     void build_feature_space() {
+        // ofstream out("cdt.build.dat", std::ostream::out);
         if (feat_opt.use_dependency) {
             DependencyExtractor extractor;
             Dictionary * dict = model->collections.create_dict("dependency");
@@ -221,11 +222,13 @@ private:
                             cache);
 
                     for (int k = 0; k < cache.size(); ++ k) {
+                        // out << cache[k] << endl;
                         dict->retrieve(cache[k].c_str(), true);
                     }
                 }
             }
         }
+        // out.close();
     }   //  end for build_feature_space
 
     void build_features_of_one_instance(Instance * inst, const vector<int> &heads, SparseVec& vec) {
@@ -239,6 +242,7 @@ private:
     }
 
     void extract_features(vector<Instance *>& dat) {
+        // ofstream out("cdt.retrieve.dat", std::ostream::out);
         if (feat_opt.use_dependency) {
             DependencyExtractor extractor;
             Dictionary * dict = model->collections.create_dict("dependency");
@@ -271,6 +275,7 @@ private:
                                 cache);
 
                         for (int k = 0; k < cache.size(); ++ k) {
+                            // out << cache[k] << endl;
                             int idx = dict->retrieve(cache[k].c_str(), false);
                             if (idx >= 0) {
                                 cache_again.push_back(idx);
