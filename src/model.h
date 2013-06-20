@@ -26,6 +26,8 @@ public:
         out.write(chunk, 16);
         unsigned int tmp;
 
+        int off = out.tellp();
+
         unsigned basic_offset =  0;
         unsigned postag_offset = 0;
         unsigned deprels_offset = 0;
@@ -46,7 +48,7 @@ public:
         write_uint(out, tmp);
 
         // decode order
-        strncmp(chunk, model_opt.decoder_name.c_str(), 16);
+        strncpy(chunk, model_opt.decoder_name.c_str(), 16);
         out.write(chunk, 16);
 
         // use dependency
@@ -81,14 +83,18 @@ public:
         parameter_offset = out.tellp();
         param.dump(out);
 
-        out.seekp(16);
+        out.seekp(off);
         write_uint(out, basic_offset);
+        // cout << out.tellp() << endl;
         write_uint(out, postag_offset);
+        // cout << out.tellp() << endl;
         write_uint(out, deprels_offset);
+        // cout << out.tellp() << endl;
         write_uint(out, feature_offset);
+        // cout << out.tellp() << endl;
         write_uint(out, parameter_offset);
 
-        out.seekp(0, std::ios::end);
+        // out.seekp(0, std::ios::end);
     }
 
     bool load(istream & in) {
@@ -103,6 +109,28 @@ public:
         unsigned int deprels_offset = read_uint(in);
         unsigned int feature_offset = read_uint(in);
         unsigned int parameter_offset = read_uint(in);
+
+        in.seekg(basic_offset);
+        model_opt.labeled = (read_uint(in) == 1);
+
+        // decode order
+        in.read(chunk, 16);
+        model_opt.decoder_name = chunk;
+
+        // use dependency
+        feat_opt.use_dependency = (read_uint(in) == 1);
+
+        // use dependency unigram
+        feat_opt.use_dependency_unigram = (read_uint(in) == 1);
+
+        // use dependency bigram
+        feat_opt.use_dependency_bigram = (read_uint(in) == 1);
+
+        // use dependency surrounding
+        feat_opt.use_dependency_surrounding = (read_uint(in) == 1);
+
+        // use dependency between
+        feat_opt.use_dependency_between = (read_uint(in) == 1);
 
         in.seekg(postag_offset);
         if (!postags.load(in)) {
@@ -121,6 +149,7 @@ public:
 
         in.seekg(parameter_offset);
         if (!param.load(in)) {
+            std::cout << "param failed" << std::endl;
             return false;
         }
 
@@ -133,9 +162,9 @@ private:
     }
 
     unsigned int read_uint(istream & in) {
-        unsigned int ret = 0;
-        in.read(reinterpret_cast<char*>(&ret), sizeof(unsigned int));
-        return ret;
+        char p[4];
+        in.read(reinterpret_cast<char*>(p), sizeof(unsigned int));
+        return *reinterpret_cast<const unsigned int*>(p);
     }
 };      //  end for class model
 

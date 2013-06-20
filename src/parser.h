@@ -11,9 +11,9 @@
 #include "extractor.h"
 #include "decoder1o.h"
 
-#include "stringmap.hpp"
 #include "cfgparser.hpp"
 #include "logging.hpp"
+#include "time.hpp"
 
 #include "debug.h"
 
@@ -49,8 +49,9 @@ public:
             train();
         }
 
+        /* running test process */
         if (__TEST__) {
-            // test();
+            test();
         }
     }
 
@@ -80,6 +81,8 @@ private:
                 WARNING_LOG("decoder-name is not configed, [1o] is set as default.");
             }
         }
+
+        __TRAIN__ = false;
 
         train_opt.train_file        = "";
         train_opt.holdout_file      = "";
@@ -125,6 +128,29 @@ private:
                 WARNING_LOG("max-iter is not configed, [10] is set as default.");
             }
         }   //  end for cfg.has_section("train")
+
+        __TEST__ = false;
+
+        test_opt.test_file  = "";
+        test_opt.model_file = "";
+
+        if (cfg.has_section("test")) {
+            __TEST__ = true;
+
+            if (cfg.get("test", "test-file", strbuf)) {
+                test_opt.test_file = strbuf;
+            } else {
+                ERROR_LOG("test-file config item is not set.");
+                return false;
+            }   //  end for if (cfg.get("train", "train-file", strbuf))
+
+            if (cfg.get("test", "model-file", strbuf)) {
+                test_opt.model_file = strbuf;
+            } else {
+                ERROR_LOG("model-file config item is not set.");
+                return false;
+            }
+        }
 
         feat_opt.use_postag                 =   false;
         feat_opt.use_postag_unigram         =   false;
@@ -182,7 +208,7 @@ private:
             << "Max-Iteration : "  << train_opt.max_iter       << endl;
     }
 
-    bool read_data(const char * filename, 
+    bool read_instances(const char * filename, 
             vector<Instance *>& dat) {
         Instance * inst = NULL;
         ifstream f(filename);
@@ -193,6 +219,7 @@ private:
         CoNLLReader reader(f);
 
         int num_inst = 0;
+
         while ((inst = reader.next())) {
             dat.push_back(inst);
             ++ num_inst;
@@ -204,7 +231,7 @@ private:
         return true;
     }
 
-    void build_feature_space() {
+    void build_feature_space(void) {
         // ofstream out("cdt.build.dat", std::ostream::out);
         if (feat_opt.use_dependency) {
             DependencyExtractor extractor;
@@ -241,68 +268,71 @@ private:
         }
     }
 
-    void extract_features(vector<Instance *>& dat) {
-        // ofstream out("cdt.retrieve.dat", std::ostream::out);
+    void extract_features(Instance * inst) {
+        int len = inst->size();
         if (feat_opt.use_dependency) {
-            DependencyExtractor extractor;
             Dictionary * dict = model->collections.create_dict("dependency");
 
-            for (int i = 0; i < dat.size(); ++ i) {
-                int len = dat[i]->size();
+            inst->dependency_features.resize(len, len);
+            inst->dependency_scores.resize(len, len);
 
-                dat[i]->dependency_features.resize(len, len);
-                dat[i]->dependency_scores.resize(len, len);
+            vector<string>  cache;
+            vector<int>     cache_again;
 
-                vector<string>  cache;
-                vector<int>     cache_again;
+            cache.reserve(100);
 
-                cache.reserve(100);
+            for (int hid = 0; hid < len; ++ hid) {
+                for (int cid = 1; cid < len; ++ cid) {
+                    inst->dependency_features[hid][cid] = NULL;
+                    inst->dependency_scores[hid][cid] = 0.;
 
-                for (int hid = 0; hid < len; ++ hid) {
-                    for (int cid = 1; cid < len; ++ cid) {
-                        dat[i]->dependency_features[hid][cid] = NULL;
-                        dat[i]->dependency_scores[hid][cid] = 0.;
+                    if (hid == cid) {
+                        continue;
+                    }
 
-                        if (hid == cid) {
-                            continue;
+                    cache.clear();
+                    cache_again.clear();
+
+                    DependencyExtractor::extract2o(inst,
+                            hid,
+                            cid,
+                            cache);
+
+                    for (int k = 0; k < cache.size(); ++ k) {
+                        // out << cache[k] << endl;
+                       int idx = dict->retrieve(cache[k].c_str(), false);
+                       if (idx >= 0) {
+                           cache_again.push_back(idx);
+                       }
+                    }
+
+                    int num_feat = cache_again.size();
+
+                    inst->dependency_features[hid][cid] = new FeatureVector;
+                    inst->dependency_features[hid][cid]->n = num_feat;
+                    inst->dependency_features[hid][cid]->idx = 0;
+                    inst->dependency_features[hid][cid]->val = 0;
+
+                    if (num_feat > 0) {
+                        inst->dependency_features[hid][cid]->idx = new int[num_feat];
+                        for (int j = 0; j < num_feat; ++ j) {
+                            inst->dependency_features[hid][cid]->idx[j] = cache_again[j];
                         }
+                    }
+                }   //  end for for cid = 1; cid < len; ++ cid
+            }   //  end for hid = 0; hid < len; ++ hid
+        }
+    }
 
-                        cache.clear();
-                        cache_again.clear();
-                        extractor.extract2o(dat[i],
-                                hid,
-                                cid,
-                                cache);
-
-                        for (int k = 0; k < cache.size(); ++ k) {
-                            // out << cache[k] << endl;
-                            int idx = dict->retrieve(cache[k].c_str(), false);
-                            if (idx >= 0) {
-                                cache_again.push_back(idx);
-                            }
-                        }
-
-                        int num_feat = cache_again.size();
-
-                        dat[i]->dependency_features[hid][cid] = new FeatureVector;
-                        dat[i]->dependency_features[hid][cid]->n = num_feat;
-                        dat[i]->dependency_features[hid][cid]->idx = 0;
-                        dat[i]->dependency_features[hid][cid]->val = 0;
-
-                        if (num_feat > 0) {
-                            dat[i]->dependency_features[hid][cid]->idx = new int[num_feat];
-                            for (int j = 0; j < num_feat; ++ j) {
-                                dat[i]->dependency_features[hid][cid]->idx[j] = cache_again[j];
-                            }
-                        }
-                    }   //  end for for cid = 1; cid < len; ++ cid
-                }   //  end for hid = 0; hid < len; ++ hid
-
-                if ((i + 1) % model_opt.display_interval == 0) {
-                    TRACE_LOG("[%d] instance is extracted.", i + 1);
-                }
-            }   // end for i = 0; i < dat.size(); ++ i
-        }   //  end for if 
+    void extract_features(vector<Instance *>& dat) {
+        // ofstream out("cdt.retrieve.dat", std::ostream::out);
+        // DependencyExtractor extractor;
+        for (int i = 0; i < dat.size(); ++ i) {
+            extract_features(dat[i]);
+            if ((i + 1) % model_opt.display_interval == 0) {
+                TRACE_LOG("[%d] instance is extracted.", i + 1);
+            }
+        }   // end for i = 0; i < dat.size(); ++ i
     }
 
     void build_gold_features() {
@@ -317,14 +347,14 @@ private:
         const char * train_file = train_opt.train_file.c_str();
         const char * holdout_file = train_opt.holdout_file.c_str();
 
-        if (!read_data(train_file, train_dat)) {
+        if (!read_instances(train_file, train_dat)) {
             ERROR_LOG("Failed to read train data from [%s].", train_file);
             return;
         } else {
             TRACE_LOG("Read in [%d] train instances.", train_dat.size());
         }
 
-        if (!read_data(train_opt.holdout_file.c_str(), holdout_dat)) {
+        if (!read_instances(train_opt.holdout_file.c_str(), holdout_dat)) {
             ERROR_LOG("Failed to read holdout data from [%s].", holdout_file);
             return;
         } else {
@@ -426,7 +456,8 @@ private:
 
             model->param.flush( train_dat.size() * (iter + 1) );
 
-            ofstream fout((train_opt.model_name + "." + to_str(iter) + ".model").c_str());
+            ofstream fout((train_opt.model_name + "." + to_str(iter) + ".model").c_str(),
+                    std::ofstream::binary);
             model->save(fout);
 
             int head_correct = 0;
@@ -451,6 +482,47 @@ private:
 
             TRACE_LOG("UAS: %.4lf ( %d / %d )", (double)head_correct / total_rels, head_correct, total_rels);
         }
+    }
+
+    void test() {
+        const char * model_file = test_opt.model_file.c_str();
+        ifstream mfs(model_file, std::ifstream::binary);
+
+        if (!mfs) {
+            return;
+        }
+
+        model = new Model;
+        if (!model->load(mfs)) {
+            return;
+        }
+
+        const char * test_file = test_opt.test_file.c_str();
+
+        ifstream f(test_file);
+        if (!f) {
+            return;
+        }
+
+        CoNLLReader reader(f);
+
+        Instance * inst = NULL;
+
+        decoder = new Decoder1O();
+
+        double before = get_time();
+        while ((inst = reader.next())) {
+            extract_features(inst);
+            calculate_score(inst, model->param);
+
+            decoder->decode(inst);
+
+            instance_verify(inst, cout, false);
+        }
+
+        double after = get_time();
+        cerr << after - before << endl;
+        sleep(1000000);
     }
 
     void calculate_score(Instance * inst, const Parameters& param, bool use_avg = false) {

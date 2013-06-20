@@ -36,9 +36,9 @@ public:
     Extractor() {}
     virtual ~Extractor() {}
 
-    virtual int extract1o(Instance * inst, int hid, vector<string> & cache) {}
-    virtual int extract2o(Instance * inst, int hid, int cid, vector<string> & cache) {}
-    virtual int extract3o(Instance * inst, int hid, int cid, int gid, vector<string> & cache) {}
+    // virtual static int extract1o(Instance * inst, int hid, vector<string> & cache) {}
+    // virtual static int extract2o(Instance * inst, int hid, int cid, vector<string> & cache) {}
+    // virtual static int extract3o(Instance * inst, int hid, int cid, int gid, vector<string> & cache) {}
 };  //  end for class Extractor
 
 
@@ -162,7 +162,7 @@ public:
     int extract1o(Instance * inst, int hid, vector<string> & cache) {
     }
 
-    int extract2o(Instance * inst, int hid, int cid, vector<string> & cache) {
+    static int extract2o(Instance * inst, int hid, int cid, vector<string> & cache) {
         int len = inst->size();
 
         if (inst->verb_cnt.size() == 0) {
@@ -349,7 +349,7 @@ private:
     string          prefix;
 
 private:
-    void __GET_DIRECTION(int head_id, int child_id, string& direction) {
+    static void __GET_DIRECTION(int head_id, int child_id, string& direction) {
         if (head_id == 0) {
             direction = "L#R";
         } else {
@@ -357,7 +357,7 @@ private:
         }
     }
 
-    void __GET_DISTANCE_1_2_36_7(int head_id, int child_id, string& distance) {
+    static void __GET_DISTANCE_1_2_36_7(int head_id, int child_id, string& distance) {
         int dist = (head_id > child_id ? head_id - child_id : child_id - head_id) ;
 
         if (dist < 3) {

@@ -89,7 +89,7 @@ void DictionaryCollections::dump(ostream & out) {
         strncpy(chunk, dicts[i]->dict_name.c_str(), 32);
         out.write(chunk, 32);
 
-        dicts[i]->dump(out);
+        dicts[i]->database.dump(out);
     }
 }
 
@@ -103,11 +103,11 @@ bool DictionaryCollections::load(istream & in) {
     }
 
     in.read(reinterpret_cast<char *>(&sz), sizeof(unsigned int));
-    for (int i = 0; i < sz; ++ i) {
+    for (unsigned i = 0; i < sz; ++ i) {
         in.read(chunk, 32);
 
         Dictionary * dict = create_dict(chunk);
-        if (!dict->load(in)) {
+        if (!dict->database.load(in)) {
             return false;
         }
 

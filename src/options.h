@@ -19,6 +19,8 @@ struct TrainOptions {
 };
 
 struct TestOptions {
+    string test_file;
+    string model_file;
 };
 
 struct FeatureOptions {

@@ -17,7 +17,7 @@ public:
     int *    _W_time;
 
     Parameters() :
-        _dim(-1),
+        _dim(0),
         _W(0),
         _W_sum(0),
         _W_time(0) {}
@@ -123,7 +123,9 @@ public:
         char chunk[16] = {'p', 'a', 'r', 'a', 'm', 0};
         out.write(chunk, 16);
         out.write(reinterpret_cast<const char *>(&_dim), sizeof(int));
-        out.write(reinterpret_cast<const char *>(p), sizeof(double) * _dim);
+        if (_dim > 0) {
+            out.write(reinterpret_cast<const char *>(p), sizeof(double) * _dim);
+        }
     }
 
     bool load(istream & in) {
@@ -134,9 +136,11 @@ public:
         }
 
         in.read(reinterpret_cast<char *>(&_dim), sizeof(int));
-        _W = new double[_dim];
-        in.read(reinterpret_cast<char *>(_W), sizeof(double) * _dim);
-        _W_sum = _W;
+        if (_dim > 0) {
+            _W = new double[_dim];
+            in.read(reinterpret_cast<char *>(_W), sizeof(double) * _dim);
+            _W_sum = _W;
+        }
 
         return true;
     }
