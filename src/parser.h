@@ -195,10 +195,12 @@ private:
                 feat_opt.use_dependency_between = (intbuf == 1);
             }
 
+            // detrieve dependency type from configuration
+            feat_opt.use_unlabeled_dependency = (model_opt.labeled == false &&
+                    feat_opt.use_dependency);
 
-            feat_opt.use_unlabeled_dependency = true;
-            if (model_opt.labeled) {
-            }
+            feat_opt.use_labeled_dependency = (model_opt.labeled == true &&
+                    feat_opt.use_dependency);
         }
     }
 
@@ -258,13 +260,91 @@ private:
         // out.close();
     }   //  end for build_feature_space
 
-    void build_features_of_one_instance(Instance * inst, const vector<int> &heads, SparseVec& vec) {
+    void build_configuration(void) {
+        // build postags set, deprels set.
+        // map deprels from string to int when model_opt.labeled is configed.
+        // need to check if the model is initialized
+
+        for (int i = 0; i < train_dat.size(); ++ i) {
+            int len = train_dat[i]->size();
+
+            // if labeled is configured, init the deprelsidxs
+            if (model_opt.labeled) {
+                train_dat[i]->deprelsidx.resize(len);
+                train_dat[i]->predicted_deprelsidx.resize(len);
+            }
+
+            for (int j = 0; j < len; ++ j) {
+                model->postags.push(train_dat[i]->postags[j].c_str());
+                if (model_opt.labeled) {
+                    int idx = -1;
+                    idx = model->deprels.push(train_dat[i]->deprels[j].c_str());
+                    train_dat[i]->deprelsidx[j] = idx;
+                }
+            }
+        }
+
+        for (int i = 0; i < holdout_dat.size(); ++ i) {
+            int len = holdout_dat[i]->size();
+
+            if (model_opt.labeled) {
+                holdout_dat[i]->deprelsidx.resize(len);
+                holdout_dat[i]->predicted_deprelsidx.resize(len);
+            }
+
+            for (int j = 0; j < len; ++ j) {
+                if (model_opt.labeled) {
+                    int idx = -1;
+                    idx = model->deprels.index(holdout_dat[i]->deprels[j].c_str());
+                    holdout_dat[i]->deprelsidx[j] = idx;
+                }
+            }
+        }
+    }
+
+    void build_unlabeled_features_of_one_instance(Instance * inst,
+            const vector<int> &heads,
+            SparseVec & vec) {
         vec.zero();
         for (int i = 1; i < inst->size(); ++ i) {
             int hid = heads[i];
-            if (feat_opt.use_dependency) {
-                vec.add(inst->dependency_features[hid][i], 1.);
-            }
+            vec.add(inst->dependency_features[hid][i], 1.);
+        }
+    }
+
+    void build_labeled_features_of_one_instance(Instance * inst, 
+            const vector<int> &heads,
+            const vector<int> &deprelsidx,
+            SparseVec & vec) {
+
+        vec.zero();
+        for (int i = 1; i < inst->size(); ++ i) {
+            int hid = heads[i];
+            int relidx = deprelsidx[i];
+
+            vec.add(inst->labeled_dependency_features[hid][i][relidx], 1.);
+        }
+    }
+
+    void build_features_of_one_instance(Instance * inst, bool train = false) {
+        if (train && feat_opt.use_unlabeled_dependency) {
+            build_unlabeled_features_of_one_instance(inst,
+                    inst->heads,
+                    inst->features);
+        } else if (train && feat_opt.use_labeled_dependency) {
+            build_labeled_features_of_one_instance(inst,
+                    inst->heads,
+                    inst->deprelsidx,
+                    inst->features);
+        } else if (!train && feat_opt.use_unlabeled_dependency) {
+            build_unlabeled_features_of_one_instance(inst,
+                    inst->predicted_heads,
+                    inst->predicted_features);
+        } else if (!train && feat_opt.use_labeled_dependency) {
+            build_labeled_features_of_one_instance(inst,
+                    inst->predicted_heads,
+                    inst->predicted_deprelsidx,
+                    inst->predicted_features);
         }
     }
 
@@ -273,8 +353,13 @@ private:
         if (feat_opt.use_dependency) {
             Dictionary * dict = model->collections.create_dict("dependency");
 
-            inst->dependency_features.resize(len, len);
-            inst->dependency_scores.resize(len, len);
+            if (!model_opt.labeled) {
+                inst->dependency_features.resize(len, len);
+                inst->dependency_scores.resize(len, len);
+            } else {
+                inst->labeled_dependency_features.resize(len, len, model->num_deprels());
+                inst->labeled_dependency_scores.resize(len, len, model->num_deprels());
+            }
 
             vector<string>  cache;
             vector<int>     cache_again;
@@ -283,8 +368,16 @@ private:
 
             for (int hid = 0; hid < len; ++ hid) {
                 for (int cid = 1; cid < len; ++ cid) {
-                    inst->dependency_features[hid][cid] = NULL;
-                    inst->dependency_scores[hid][cid] = 0.;
+
+                    if (!model_opt.labeled) {
+                        inst->dependency_features[hid][cid] = NULL;
+                        inst->dependency_scores[hid][cid] = 0.;
+                    } else {
+                        for (int l = 0; l < model->num_deprels(); ++ l) {
+                            inst->labeled_dependency_features[hid][cid][l] = NULL;
+                            inst->labeled_dependency_scores[hid][cid][l] = 0.;
+                        }
+                    }
 
                     if (hid == cid) {
                         continue;
@@ -308,15 +401,34 @@ private:
 
                     int num_feat = cache_again.size();
 
-                    inst->dependency_features[hid][cid] = new FeatureVector;
-                    inst->dependency_features[hid][cid]->n = num_feat;
-                    inst->dependency_features[hid][cid]->idx = 0;
-                    inst->dependency_features[hid][cid]->val = 0;
+                    // not use label
+                    if (!model_opt.labeled) {
+                        inst->dependency_features[hid][cid] = new FeatureVector;
+                        inst->dependency_features[hid][cid]->n = num_feat;
+                        inst->dependency_features[hid][cid]->idx = 0;
+                        inst->dependency_features[hid][cid]->val = 0;
 
-                    if (num_feat > 0) {
-                        inst->dependency_features[hid][cid]->idx = new int[num_feat];
-                        for (int j = 0; j < num_feat; ++ j) {
-                            inst->dependency_features[hid][cid]->idx[j] = cache_again[j];
+                        if (num_feat > 0) {
+                            inst->dependency_features[hid][cid]->idx = new int[num_feat];
+                            for (int j = 0; j < num_feat; ++ j) {
+                                inst->dependency_features[hid][cid]->idx[j] = cache_again[j];
+                            }
+                        }
+                    } else { // use label
+                        for (int l = 0; l < model->num_deprels(); ++ l) {
+                            inst->labeled_dependency_features[hid][cid][l] = new FeatureVector;
+                            inst->labeled_dependency_features[hid][cid][l]->n = num_feat;
+                            inst->labeled_dependency_features[hid][cid][l]->idx = 0;
+                            inst->labeled_dependency_features[hid][cid][l]->val = 0;
+
+                            if (num_feat > 0) {
+                                inst->labeled_dependency_features[hid][cid][l]->idx = new int[num_feat];
+
+                                for (int j = 0; j < num_feat; ++ j) {
+                                    inst->labeled_dependency_features[hid][cid][l]->idx[j] = (
+                                            cache_again[j] + model->num_features() * l);
+                                }
+                            }
                         }
                     }
                 }   //  end for for cid = 1; cid < len; ++ cid
@@ -337,9 +449,7 @@ private:
 
     void build_gold_features() {
         for (int i = 0; i < train_dat.size(); ++ i) {
-            build_features_of_one_instance(train_dat[i], 
-                    train_dat[i]->heads, 
-                    train_dat[i]->features);
+            build_features_of_one_instance(train_dat[i], true);
         }
     }
 
@@ -363,6 +473,12 @@ private:
 
         model = new Model;
 
+        TRACE_LOG("Start building configuration.");
+        build_configuration();
+        TRACE_LOG("Building configuration is done.");
+        TRACE_LOG("Number of postags: [%d]", model->num_postags());
+        TRACE_LOG("Number of deprels: [%d]", model->num_deprels());
+
         TRACE_LOG("Start building feature space.");
         build_feature_space();
         TRACE_LOG("Building feature space is done.");
@@ -374,12 +490,17 @@ private:
         TRACE_LOG("Extracting feature is done.");
 
         build_gold_features();
-#if DEBUG
-        model->collections.dump(cout);
-#endif  //  end for DEBUG
-        model->param.realloc(model->collections.dim());
-        decoder = new Decoder1O();
-        // model->collections.dump(cout);
+
+        model->param.realloc(model->dim());
+        TRACE_LOG("Allocate a parameter vector of [%d] dimension.", model->dim());
+
+        if (!model_opt.labeled) {
+            decoder = new Decoder1O();
+            TRACE_LOG("1st-Order Decoder without label is configured.");
+        } else {
+            decoder = new Decoder1O(model->num_deprels());
+            TRACE_LOG("1st-Order Decoder with [%d] labels is configured.", model->num_deprels());
+        }
 
         for (int iter = 0; iter < train_opt.max_iter; ++ iter) {
             TRACE_LOG("Start training epoch #%d.", (iter + 1));
@@ -387,11 +508,13 @@ private:
             // random_shuffle(train_dat.begin(), train_dat.end());
             for (int i = 0; i < train_dat.size(); ++ i) {
                 calculate_score(train_dat[i], model->param);
+#if DEBUG
+                instance_verify(train_dat[i], cout, true);
+#endif  //  end for DEBUG
+
                 decoder->decode(train_dat[i]);
 
-                build_features_of_one_instance(train_dat[i],
-                        train_dat[i]->predicted_heads,
-                        train_dat[i]->predicted_features);
+                build_features_of_one_instance(train_dat[i], false);
 
 #if DEBUG
                 instance_verify(train_dat[i], cout, true);
@@ -400,22 +523,10 @@ private:
                 if (train_opt.algorithm == "pa") {
                     SparseVec update_features;
                     update_features.zero();
-                    /*for (int j = 1; j < train_dat[i]->size(); ++ j) {
-                        if (train_dat[i]->heads[j] != train_dat[i]->predicted_heads[j]) {
-                            int hid, cid;
-                            hid = train_dat[i]->heads[j];
-                            cid = j;
-                            update_features.add(train_dat[i]->dependency_features[hid][cid], 1.);
-
-                            hid = train_dat[i]->predicted_heads[j];
-                            cid = j;
-                            update_features.add(train_dat[i]->dependency_features[hid][cid], -1.);
-                        }
-                    }*/
                     update_features.add(train_dat[i]->features, 1.);
                     update_features.add(train_dat[i]->predicted_features, -1.);
 
-                    double error = train_dat[i]->num_errors(false);
+                    double error = train_dat[i]->num_errors();
                     double score = model->param.dot(update_features, false);
                     double norm = update_features.L2();
                     double step = 0.;
@@ -447,7 +558,6 @@ private:
 #if DEBUG
                  model->param.str(cout);
 #endif  //  end for DEBUG
-                // instance_verify(train_dat[i], cout, false);
 
                 if ((i + 1) % model_opt.display_interval == 0) {
                     TRACE_LOG("[%d] instances is trained.", i + 1);
@@ -469,22 +579,31 @@ private:
                 decoder->decode(holdout_dat[i]);
 
 #if DEBUG
-                build_features_of_one_instance(holdout_dat[i],
-                        holdout_dat[i]->predicted_heads,
-                        holdout_dat[i]->predicted_features);
+                build_features_of_one_instance(holdout_dat[i], false);
                 instance_verify(holdout_dat[i], cout, true);
 #endif //   end for DEBUG
 
-                int num_rels = holdout_dat[i]->num_rels();
-                total_rels += num_rels;
-                head_correct += (num_rels - holdout_dat[i]->num_errors());
+                total_rels += holdout_dat[i]->num_rels();
+                head_correct += holdout_dat[i]->num_correct_heads();
+                label_correct += holdout_dat[i]->num_correct_heads_and_labels();
             }
 
-            TRACE_LOG("UAS: %.4lf ( %d / %d )", (double)head_correct / total_rels, head_correct, total_rels);
+            TRACE_LOG("UAS: %.4lf ( %d / %d )", 
+                    (double)head_correct / total_rels, 
+                    head_correct, 
+                    total_rels);
+
+            if (model_opt.labeled) {
+                TRACE_LOG("LAS: %.4lf ( %d / %d )", 
+                        (double)label_correct / total_rels, 
+                        label_correct, 
+                        total_rels);
+            }
         }
     }
 
     void test() {
+        double before = get_time();
         const char * model_file = test_opt.model_file.c_str();
         ifstream mfs(model_file, std::ifstream::binary);
 
@@ -510,7 +629,12 @@ private:
 
         decoder = new Decoder1O();
 
-        double before = get_time();
+        double head_correct = 0;
+        double label_correct = 0;
+        double total_rels = 0;
+
+        cerr << get_time() - before << endl;
+        before = get_time();
         while ((inst = reader.next())) {
             extract_features(inst);
             calculate_score(inst, model->param);
@@ -518,7 +642,15 @@ private:
             decoder->decode(inst);
 
             instance_verify(inst, cout, false);
+
+            int num_rels = inst->num_rels();
+            total_rels += num_rels;
+            head_correct += (num_rels - inst->num_errors());
+
+            delete inst;
         }
+
+        TRACE_LOG("UAS: %.4lf ( %d / %d )", (double)head_correct / total_rels, head_correct, total_rels);
 
         double after = get_time();
         cerr << after - before << endl;
@@ -535,18 +667,36 @@ private:
             }
         }   //  end if feat_opt.use_postag_unigram
 
-        if (feat_opt.use_dependency) {
+        if (feat_opt.use_unlabeled_dependency) {
             for (int i = 0; i < len; ++ i) {
                 for (int j = 1; j < len; ++ j) {
                     FeatureVector * fv = inst->dependency_features[i][j];
                     inst->dependency_scores[i][j] = DOUBLE_NEG_INF;
+
                     if (!fv) {
                         continue;
                     }
                     inst->dependency_scores[i][j] = param.dot(fv, use_avg);
                 }
             }
-        }   //  end if feat_opt.use_dependency
+        }   //  end if feat_opt.use_unlabeled_dependency
+
+        if (feat_opt.use_labeled_dependency) {
+            for (int i = 0; i < len; ++ i) {
+                for (int j = 1; j < len; ++ j) {
+                    for (int l = 0; l < model->num_deprels(); ++ l) {
+                        FeatureVector * fv = inst->labeled_dependency_features[i][j][l];
+                        inst->labeled_dependency_scores[i][j][l] = DOUBLE_NEG_INF;
+
+                        if (!fv) {
+                            continue;
+                        }
+
+                        inst->labeled_dependency_scores[i][j][l] = param.dot(fv, use_avg);
+                    }
+                }
+            }
+        }   //  end if feat_opt.use_labeled_dependency
     }
 };  //  end for class Parser
 }   //  end for namespace parser

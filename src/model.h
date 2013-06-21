@@ -10,15 +10,41 @@ namespace parser {
 
 class Model {
 public:
-    Model() {}
+    Model() : _dim(-1) {}
     ~Model() {}
+
+    inline int num_deprels() {
+        return deprels.size();
+    }
+
+    inline int num_postags() {
+        return postags.size();
+    }
+
+    inline int num_features() {
+        return collections.dim();
+    }
+
+    inline int dim() {
+        if (_dim < 0) {
+            _dim = 0;
+
+            if (feat_opt.use_unlabeled_dependency) {
+                _dim += collections.create_dict("dependency")->size();
+            } else {
+                _dim += (collections.create_dict("dependency")->size()) * num_deprels();
+            }
+        }
+
+        return _dim;
+    }
 
 public:
     DictionaryCollections   collections;
     Parameters              param;
 
-    SmartMap<int>           postags;
-    SmartMap<int>           deprels;
+    LabelCollections        postags;
+    LabelCollections        deprels;
 
     void save(ostream & out) {
         // write a signature
@@ -155,6 +181,10 @@ public:
 
         return true;
     }
+
+private:
+    int _dim;
+
 
 private:
     void write_uint(ostream & out, unsigned int val) {

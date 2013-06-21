@@ -65,6 +65,82 @@ public:
 
         return -1;
     }
+
+    inline int size() {
+        return database.size();
+    }
+};
+
+class LabelCollections : public SmartMap<int> {
+public:
+    LabelCollections() : entries(0), cap_entries(0) {}
+
+    ~LabelCollections() {
+        if (entries) {
+            delete [](entries);
+        }
+    }
+
+private:
+    int cap_entries;
+    int * entries;
+
+public:
+    int push(const char * key) {
+        if (!contains(key)) {
+            int idx = SmartMap<int>::size();
+            set(key, idx);
+
+            if (cap_entries < SmartMap<int>::_num_entries) {
+                cap_entries = ( SmartMap<int>::_num_entries << 1);
+                int * new_entries = new int[cap_entries];
+                if ( entries ) {
+                    memcpy(new_entries, entries, sizeof(int) * (SmartMap<int>::_num_entries - 1));
+                    delete [](entries);
+                }
+                entries = new_entries;
+            }
+
+            // SmartMap<int>::debug(cout);
+            entries[_num_entries-1] = SmartMap<int>::_latest_hash_node->__key_off;
+            return idx;
+        } else {
+            return (*get(key));
+        }
+    }
+
+    const char * at(int i) {
+        if (i >= 0 && i < _num_entries) {
+            return SmartMap<int>::_key_buffer + entries[i];
+        } else {
+            return 0;
+        }
+    }
+
+    int index( const char * key ) {
+        int val = -1;
+        if (get(key, val)) {
+            return val;
+        }
+
+        return -1;
+    }
+
+    void dump(ostream & out) {
+        SmartMap<int>::dump(out);
+        out.write(reinterpret_cast<const char *>(entries), sizeof(int) * _num_entries);
+    }
+
+    bool load(istream & in) {
+        SmartMap<int>::load(in);
+
+        if (entries) {
+            delete [](entries);
+        }
+
+        entries = new int[SmartMap<int>::_num_entries];
+        in.read(reinterpret_cast<char *>(entries), sizeof(int) * _num_entries);
+    }
 };
 
 Dictionary * DictionaryCollections::create_dict(const char * name) {

@@ -26,7 +26,51 @@ public:
         return forms.size();
     }
 
-    int num_errors(bool ignore_punctation = true) const {
+    int num_error_heads(bool ignore_punctation = true) const {
+        if (predicted_heads.size() == 0) {
+            return size();
+        }
+
+        int ret = 0;
+        int len = size();
+        for (int i = 1; i < len; ++ i) {
+            if (ignore_punctation && postags[i] == "wp") {
+                continue;
+            }
+
+            if (predicted_heads[i] != heads[i]) {
+                ++ ret;
+            }
+        }
+
+        return ret;
+    }
+
+    int num_error_labels(bool ignore_punctation = true) {
+        if (predicted_heads.size() == 0 || predicted_deprelsidx.size() == 0) {
+            return size();
+        }
+
+        int ret = 0;
+        int len = size();
+        for (int i = 1; i < len; ++ i) {
+            if (ignore_punctation && postags[i] == "wp") {
+                continue;
+            }
+
+            if (predicted_heads[i] == heads[i] && predicted_deprelsidx[i] != deprelsidx[i]) {
+                ++ ret;
+            }
+        }
+
+        return ret;
+    }
+
+    double num_errors() {
+        return num_error_heads() + 0.5 * num_error_labels();
+    }
+
+    int num_correct_heads(bool ignore_punctation = true) {
         if (predicted_heads.size() == 0) {
             return -1;
         }
@@ -38,7 +82,27 @@ public:
                 continue;
             }
 
-            if (predicted_heads[i] != heads[i]) {
+            if (predicted_heads[i] == heads[i]) {
+                ++ ret;
+            }
+        }
+
+        return ret;
+    }
+
+    int num_correct_heads_and_labels(bool ignore_punctation = true) {
+        if (predicted_heads.size() == 0 || predicted_deprelsidx.size() == 0) {
+            return -1;
+        }
+
+        int ret = 0;
+        int len = size();
+        for (int i = 1; i < len; ++ i) {
+            if (ignore_punctation && postags[i] == "wp") {
+                continue;
+            }
+
+            if (predicted_heads[i] == heads[i] && (predicted_deprelsidx[i] == deprelsidx[i])) {
                 ++ ret;
             }
         }
@@ -69,10 +133,12 @@ public:
     vector<string>  postags;    /* */
 
     vector<int>     heads;
+    vector<int>     deprelsidx;
     vector<string>  deprels;
     SparseVec       features;
 
     vector<int>     predicted_heads;
+    vector<int>     predicted_deprelsidx;
     vector<string>  predicted_deprels;
     SparseVec       predicted_features;
 

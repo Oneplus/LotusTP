@@ -17,12 +17,28 @@ void instance_verify(const Instance * inst, ostream & out, bool show_features) {
             << inst->postags[i]
             << "\t"
             << inst->heads[i];
-
         if (inst->predicted_heads.size() > 0) {
             out << "("
                 << inst->predicted_heads[i]
                 << ")";
         }
+
+        if (inst->deprels.size() > 0) {
+            out << "\t"
+                << inst->deprels[i];
+            if (inst->deprelsidx.size() > 0) {
+                out << "["
+                    << inst->deprelsidx[i]
+                    << "]";
+            }
+ 
+            if (inst->predicted_deprelsidx.size() > 0) {
+                out << "-["
+                    << inst->predicted_deprelsidx[i]
+                    << "]";
+            }
+        }
+
         out << endl;
     }
     out << "  }," << endl;
