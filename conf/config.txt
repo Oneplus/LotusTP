@@ -1,0 +1,19 @@
+[model]
+labeled = 1
+decoder-name = 1o
+
+[feature]
+use-postag-unigram = 0
+use-dependency = 1
+use-dependency-unigram = 1
+use-dependency-bigram = 1
+use-dependency-surrounding = 1
+use-dependency-between = 1
+
+[train]
+train-file = data/train.conll
+holdout-file = data/holdout.conll
+
+max-iter = 5 
+algorithm = pa
+model-name = lgdpj

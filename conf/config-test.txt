@@ -1,0 +1,3 @@
+[test]
+test-file = data/test.conll
+model-file = lgdpj.3.model
