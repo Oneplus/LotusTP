@@ -20,6 +20,23 @@ public:
     }
 
     ~Instance() {
+        if (labeled_dependency_features.total_size() > 0) {
+            for (int i = 0; i < labeled_dependency_features.dim1(); ++ i) {
+                for (int j = 0; j < labeled_dependency_features.dim2(); ++ j) {
+                    for (int k = 0; k < labeled_dependency_features.dim3();++ k) {
+                        delete labeled_dependency_features[i][j][k];
+                    }
+                }
+            }
+        }
+
+        if (dependency_features.total_size() > 0) {
+            for (int i = 0; i < dependency_features.nrows(); ++ i) {
+                for (int j = 0; j < dependency_features.ncols(); ++ j) {
+                    delete dependency_features[i][j];
+                }
+            }
+        }
     }
 
     size_t size() const {
@@ -72,7 +89,7 @@ public:
 
     int num_correct_heads(bool ignore_punctation = true) {
         if (predicted_heads.size() == 0) {
-            return -1;
+            return 0;
         }
 
         int ret = 0;
@@ -92,7 +109,7 @@ public:
 
     int num_correct_heads_and_labels(bool ignore_punctation = true) {
         if (predicted_heads.size() == 0 || predicted_deprelsidx.size() == 0) {
-            return -1;
+            return 0;
         }
 
         int ret = 0;

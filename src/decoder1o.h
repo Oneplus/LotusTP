@@ -78,6 +78,7 @@ protected:
                             if (feat_opt.use_postag_bigram) {
                             }
 
+                            // std::cerr << l <<" ";
                             const LatticeItem * const item = new LatticeItem(INCMP,
                                     s,
                                     t,
@@ -179,12 +180,8 @@ protected:
     void get_result(Instance * inst) {
         int len = inst->size();
         inst->predicted_heads.resize(len, -1);
-        for (int i = 0; i < len; ++ i) {
-            inst->predicted_heads[i] = -1;
-        }
-
         if (model_opt.labeled) {
-            inst->predicted_deprels.resize(len);
+            inst->predicted_deprelsidx.resize(len, -1);
         }
 
         const LatticeItem * best_item = _lattice_cmp[0][len - 1];
@@ -216,16 +213,15 @@ private:
 
         if (INCMP == item->_comp) {
             inst->predicted_heads[item->_t] = item->_s;
+
+            if (model_opt.labeled) {
+                inst->predicted_deprelsidx[item->_t] = item->_label_s_t;
+            }
         } else if (CMP == item->_comp) {
             // do nothing;
         } else {
         }
 
-        /*for (list<const FeatureVector *>::const_iterator itx = item->_fvs.begin();
-                itx != item->_fvs.end();
-                itx ++ ) {
-            inst->predicted_features.add(*itx);
-        }*/
 
         __BUILD_TREE(inst, item->_right);
     }

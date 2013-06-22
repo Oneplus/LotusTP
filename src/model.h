@@ -158,6 +158,12 @@ public:
         // use dependency between
         feat_opt.use_dependency_between = (read_uint(in) == 1);
 
+        feat_opt.use_unlabeled_dependency = (!model_opt.labeled &&
+                feat_opt.use_dependency);
+
+        feat_opt.use_labeled_dependency = (model_opt.labeled &&
+                feat_opt.use_dependency);
+
         in.seekg(postag_offset);
         if (!postags.load(in)) {
             return false;

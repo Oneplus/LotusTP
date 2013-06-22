@@ -367,7 +367,7 @@ private:
             cache.reserve(100);
 
             for (int hid = 0; hid < len; ++ hid) {
-                for (int cid = 1; cid < len; ++ cid) {
+                for (int cid = 0; cid < len; ++ cid) {
 
                     if (!model_opt.labeled) {
                         inst->dependency_features[hid][cid] = NULL;
@@ -616,6 +616,20 @@ private:
             return;
         }
 
+        TRACE_LOG("Number of deprels [%d]", model->num_deprels());
+        TRACE_LOG("Number of dimension [%d]", model->dim());
+        TRACE_LOG("Number of features [%d]", model->num_features());
+        TRACE_LOG("Labeled: %s", (model_opt.labeled ? "true" : "fales"));
+        TRACE_LOG("Decoder: %s", model_opt.decoder_name.c_str());
+        TRACE_LOG("Dependency features unigram:     %s", 
+                (feat_opt.use_dependency_unigram ? "true" : "false"));
+        TRACE_LOG("Dependency features bigram:      %s", 
+                (feat_opt.use_dependency_bigram ? "true" : "false"));
+        TRACE_LOG("Dependency features surrounding: %s", 
+                (feat_opt.use_dependency_surrounding ? "true" : "false"));
+        TRACE_LOG("Dependency features between:     %s", 
+                (feat_opt.use_dependency_between ? "true" : "false"));
+
         const char * test_file = test_opt.test_file.c_str();
 
         ifstream f(test_file);
@@ -627,30 +641,49 @@ private:
 
         Instance * inst = NULL;
 
-        decoder = new Decoder1O();
+        if (!model_opt.labeled) {
+            decoder = new Decoder1O();
+        } else {
+            decoder = new Decoder1O(model->num_deprels());
+        }
 
-        double head_correct = 0;
-        double label_correct = 0;
-        double total_rels = 0;
+        int head_correct = 0;
+        int label_correct = 0;
+        int total_rels = 0;
 
         cerr << get_time() - before << endl;
         before = get_time();
         while ((inst = reader.next())) {
+
+            if (model_opt.labeled) {
+                inst->deprelsidx.resize(inst->size());
+                for (int i = 1; i < inst->size(); ++ i) {
+                    inst->deprelsidx[i] = model->deprels.index(inst->deprels[i].c_str());
+                }
+            }
+
             extract_features(inst);
             calculate_score(inst, model->param);
 
             decoder->decode(inst);
 
-            instance_verify(inst, cout, false);
+            instance_verify(inst, cout, true);
 
-            int num_rels = inst->num_rels();
-            total_rels += num_rels;
-            head_correct += (num_rels - inst->num_errors());
+            total_rels += inst->num_rels();
+            head_correct += inst->num_correct_heads();
+            label_correct += inst->num_correct_heads_and_labels();
 
             delete inst;
         }
 
         TRACE_LOG("UAS: %.4lf ( %d / %d )", (double)head_correct / total_rels, head_correct, total_rels);
+
+        if (model_opt.labeled) {
+            TRACE_LOG("LAS: %.4lf ( %d / %d )", 
+                    (double)label_correct / total_rels, 
+                    label_correct, 
+                    total_rels);
+        }
 
         double after = get_time();
         cerr << after - before << endl;

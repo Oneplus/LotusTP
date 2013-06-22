@@ -360,6 +360,9 @@ public:
         return kk;
     }
 
+    inline int total_size() const {
+        return tot_sz;
+    }
 };  //  end for class Mat3
 
 }   //  end for namespace math

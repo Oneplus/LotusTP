@@ -367,6 +367,7 @@ public:
                 << " "
                 << "(\"" << _key_buffer + _hash_buffer[i].__key_off << "\""
                 << ", " << _hash_buffer[i].__hash_val
+                << ", " << _val_buffer[_hash_buffer[i].__val_off]
                 << ", " << _hash_buffer[i].__freq
                 << ", " << _hash_buffer[i].__next_off
                 << ")" << std::endl;
@@ -374,14 +375,14 @@ public:
         out << "==========================" << std::endl << std::endl;
     }
 
-private:
+protected:
 
     static const unsigned int INIT_CAP_BUCKETS    = 256;
     static const unsigned int INIT_CAP_ENTRIES    = 256;
     static const unsigned int INIT_CAP_KEY_BUFFER = 1024;
     static const unsigned int PRIMES[100]; 
 
-private:
+protected:
     struct hash_node_t {
     public:
         unsigned int    __key_off;
@@ -407,7 +408,7 @@ private:
     char *          _key_buffer;    /*< the buffer of key */
     T *             _val_buffer;    /*< the buffer of value */
 
-private:
+protected:
     /*< buckets related counter */
     unsigned int    _num_buckets;
     unsigned int    _cap_buckets;
@@ -428,7 +429,7 @@ private:
     T *             _latest_val;
     hash_node_t *   _latest_hash_node;
 
-private:
+protected:
     /*
      * internal function for appending a (key, value, frequence) 
      * tuple into the pool

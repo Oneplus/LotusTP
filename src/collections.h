@@ -160,6 +160,7 @@ void DictionaryCollections::dump(ostream & out) {
     strncpy(chunk, "collections", 16);
 
     out.write(chunk, 16);
+    out.write(reinterpret_cast<const char *>(&idx), sizeof(int));
     out.write(reinterpret_cast<const char *>(&sz), sizeof(unsigned int));
     for (int i = 0; i < dicts.size(); ++ i) {
         strncpy(chunk, dicts[i]->dict_name.c_str(), 32);
@@ -178,6 +179,7 @@ bool DictionaryCollections::load(istream & in) {
         return false;
     }
 
+    in.read(reinterpret_cast<char *>(&idx), sizeof(int));
     in.read(reinterpret_cast<char *>(&sz), sizeof(unsigned int));
     for (unsigned i = 0; i < sz; ++ i) {
         in.read(chunk, 32);
