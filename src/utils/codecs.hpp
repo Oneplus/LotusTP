@@ -16,7 +16,7 @@ namespace codecs {
 enum { UTF8, GBK };
 
 using namespace std;
-int decode(const std::string & s, 
+inline int decode(const std::string & s, 
         std::vector<std::string>& chars, int encoding=UTF8) {
     unsigned long int idx=0;
     unsigned long int len=0;

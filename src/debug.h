@@ -7,7 +7,7 @@
 namespace ltp {
 namespace parser {
 
-void instance_verify(const Instance * inst, ostream & out, bool show_features) {
+inline void instance_verify(const Instance * inst, ostream & out, bool show_features) {
     out << "instance : {" << endl;
     out << "  basic: {" << endl;
     for (int i = 0; i < inst->size(); ++ i) {

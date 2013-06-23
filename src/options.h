@@ -53,10 +53,10 @@ struct ModelOptions {
     int     display_interval;       /*< the display interval */
 };
 
-ModelOptions     model_opt;
-TrainOptions     train_opt;
-TestOptions      test_opt;
-FeatureOptions   feat_opt;
+extern ModelOptions     model_opt;
+extern TrainOptions     train_opt;
+extern TestOptions      test_opt;
+extern FeatureOptions   feat_opt;
 
 }       //  end for namespace parser
 }       //  end for namespace ltp

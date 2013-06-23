@@ -127,10 +127,10 @@ public:
                         q = _hash_buffer[q].__next_off) ;
 
                 if (_hash_buffer[q].__freq < _hash_buffer[p].__freq) {
-                    swap((_hash_buffer[q].__freq),     (_hash_buffer[p].__freq));
-                    swap((_hash_buffer[q].__key_off),  (_hash_buffer[p].__key_off));
-                    swap((_hash_buffer[q].__val_off),  (_hash_buffer[p].__val_off));
-                    swap((_hash_buffer[q].__hash_val), (_hash_buffer[p].__hash_val));
+                    std::swap((_hash_buffer[q].__freq),     (_hash_buffer[p].__freq));
+                    std::swap((_hash_buffer[q].__key_off),  (_hash_buffer[p].__key_off));
+                    std::swap((_hash_buffer[q].__val_off),  (_hash_buffer[p].__val_off));
+                    std::swap((_hash_buffer[q].__hash_val), (_hash_buffer[p].__hash_val));
                 }
 
                 ret = false;

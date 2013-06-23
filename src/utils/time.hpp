@@ -13,7 +13,7 @@
 namespace ltp {
 namespace utility {
 
-double get_time(void) {
+inline double get_time(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec + (tv.tv_usec / 1000000.0);

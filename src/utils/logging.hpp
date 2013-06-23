@@ -36,7 +36,11 @@
 #define UL_LOG_X_ERROR      40
 #define UL_LOG_X_FATAL      50
 
-
+/*
+ * Trick, to make it header-only, a template class
+ * is needed.
+ */
+template<typename T>
 class ul_logger {
 public:
     /*
@@ -65,7 +69,7 @@ public:
      *  @param[in]  _lvl        the log level
      *  @return     int         0 on success, otherwise -1
      */
-    static int config(const char * _filename,
+    static inline int config(const char * _filename,
             int _lvl) {
         if (_instance != NULL) {
             return -1;
@@ -130,7 +134,7 @@ public:
      *  @param  fmt     the format string
      *  @param  va_arg
      */
-    void write_log(int lvl, char * fmt, ...) {
+    inline void write_log(int lvl, char * fmt, ...) {
         if (lvl < log_lvl) {
             return;
         }
@@ -176,7 +180,7 @@ public:
      *
      *
      */
-    void regist_lvl(int lvl, const char * lvl_name) {
+    inline void regist_lvl(int lvl, const char * lvl_name) {
         if (num_lvl_name_entries >= max_lvl_name_entries) {
             return;
         }
@@ -221,27 +225,27 @@ private:
 };
 
 #define DEBUG_LOG(msg, ...) do { \
-    ul_logger::get_logger()->write_log(UL_LOG_X_DEBUG, msg, ##__VA_ARGS__); \
+    ul_logger<void>::get_logger()->write_log(UL_LOG_X_DEBUG, msg, ##__VA_ARGS__); \
 } while (0);
 
 #define TRACE_LOG(msg, ...) do { \
-    ul_logger::get_logger()->write_log(UL_LOG_X_TRACE, msg, ##__VA_ARGS__); \
+    ul_logger<void>::get_logger()->write_log(UL_LOG_X_TRACE, msg, ##__VA_ARGS__); \
 } while (0);
 
 #define WARNING_LOG(msg, ...) do { \
-    ul_logger::get_logger()->write_log(UL_LOG_X_WARNING, msg, ##__VA_ARGS__); \
+    ul_logger<void>::get_logger()->write_log(UL_LOG_X_WARNING, msg, ##__VA_ARGS__); \
 } while (0);
 
 #define ERROR_LOG(msg, ...) do { \
-    ul_logger::get_logger()->write_log(UL_LOG_X_ERROR, "%s: line %d: %s(): " msg, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
+    ul_logger<void>::get_logger()->write_log(UL_LOG_X_ERROR, "%s: line %d: %s(): " msg, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
 } while (0);
 
 #define FATAL_LOG(msg, ...) do { \
-    ul_logger::get_logger()->write_log(UL_LOG_X_FATAL, "%s: line %d: %s(): " msg, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
+    ul_logger<void>::get_logger()->write_log(UL_LOG_X_FATAL, "%s: line %d: %s(): " msg, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
 } while (0);
 
-ul_logger *        ul_logger::_instance = NULL;
-spthread_mutex_t   ul_logger::mutex;
+template<typename T> ul_logger<T> *   ul_logger<T>::_instance = NULL;
+template<typename T> spthread_mutex_t ul_logger<T>::mutex;
 
 #endif  // end for __UL_LOGGING_X_H__
 

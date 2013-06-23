@@ -36,7 +36,7 @@ namespace strutils { //LTP_STRING_NAMESPACE_BEGIN
  *  @param  str     std::string
  *  @return         std::string
  */
-std::string chomp(std::string str) {
+inline std::string chomp(std::string str) {
     int len = str.size();
 
     if (len == 0) {
@@ -64,7 +64,7 @@ std::string chomp(std::string str) {
  *  @param  mark    std::string     the cut out mark
  *  @return         std::string     the cut string
  */
-std::string cutoff(std::string str, std::string mark) {
+inline std::string cutoff(std::string str, std::string mark) {
     size_t pos = str.find(mark);
 
     if (pos == std::string::npos) {
@@ -83,7 +83,7 @@ std::string cutoff(std::string str, std::string mark) {
  *  @param  maxsplit    std::string     the sep upperbound
  *  @return             std::vector<std::string> the words
  */
-std::vector<std::string> split(std::string str, int maxsplit = -1) {
+inline std::vector<std::string> split(std::string str, int maxsplit = -1) {
     std::vector<std::string> ret;
 
     int numsplit = 0;
@@ -136,7 +136,7 @@ std::vector<std::string> split(std::string str, int maxsplit = -1) {
  *  @param  maxsplit    std::string     the sep upperbound
  *  @return             std::vector<std::string> the words
  */
-std::vector<std::string> split_by_sep(std::string str, std::string sep = "", int maxsplit = -1) {
+inline std::vector<std::string> split_by_sep(std::string str, std::string sep = "", int maxsplit = -1) {
     std::vector<std::string> ret;
 
     int numsplit = 0;
@@ -201,7 +201,7 @@ std::vector<std::string> split_by_sep(std::string str, std::string sep = "", int
  *  @param  maxsplit    std::string     the sep upperbound
  *  @return             std::vector<std::string> the words
  */
-std::vector<std::string> rsplit(std::string str, int maxsplit = -1) {
+inline std::vector<std::string> rsplit(std::string str, int maxsplit = -1) {
 }
 
 /*
@@ -214,7 +214,7 @@ std::vector<std::string> rsplit(std::string str, int maxsplit = -1) {
  *  @return             std::vector<std::string> the words
  */
 
-std::vector<std::string> rsplit_by_sep(std::string str, std::string sep = "", int maxsplit = -1) {
+inline std::vector<std::string> rsplit_by_sep(std::string str, std::string sep = "", int maxsplit = -1) {
 }
 
 /*
@@ -223,7 +223,7 @@ std::vector<std::string> rsplit_by_sep(std::string str, std::string sep = "", in
  *  @param  words   std::vector<std::string>    the words
  *  @return         std::string     the concatenated string
  */
-std::string join(std::vector<std::string> sep) {
+inline std::string join(std::vector<std::string> sep) {
     std::string ret = "";
     for (int i = 0; i < sep.size(); ++ i) {
         ret = ret + sep[i];
@@ -239,7 +239,7 @@ std::string join(std::vector<std::string> sep) {
  *  @param  sep     std::string                 the sep
  *  @return         std::string     the concatenated string
  */
-std::string join(std::vector<std::string> sep, std::string separator) {
+inline std::string join(std::vector<std::string> sep, std::string separator) {
     if (sep.size() == 0) return "";
     std::string ret = sep[0];
     for (int i = 1; i < sep.size(); ++ i) {
@@ -256,13 +256,13 @@ std::string join(std::vector<std::string> sep, std::string separator) {
  *  @return         bool                    true if startswith prefix,
  *                                          otherwise false
  */
-bool startswith(const std::string &str, const std::string &head) {
+inline bool startswith(const std::string &str, const std::string &head) {
     int len = head.size();
 
     return (str.substr(0, len) == head);
 }
 
-bool endswith(const std::string &str, const std::string &suffix) {
+inline bool endswith(const std::string &str, const std::string &suffix) {
     int len = suffix.length();
     int len2 = str.length();
     if (len2 < len) {
@@ -280,7 +280,7 @@ bool endswith(const std::string &str, const std::string &suffix) {
  *  @return         bool                    true if the string is integer,
  *                                          otherwise false
  */
-bool is_int(const std::string &str) {
+inline bool is_int(const std::string &str) {
     int i = 0;
     if (str[0] == '-')
         i = 1;
@@ -300,7 +300,7 @@ bool is_int(const std::string &str) {
  *  @return         bool                    true if the string is double,
  *                                          otherwise false
  */
-bool is_double(const std::string &str) {
+inline bool is_double(const std::string &str) {
     int i = 0;
     int state = 0;
     if (str[0] == '-')
@@ -324,7 +324,7 @@ bool is_double(const std::string &str) {
  *  @param  str     const std::string&      the string
  *  @return         int                     the integer.
  */
-int to_int(const std::string &str) {
+inline int to_int(const std::string &str) {
     int ret = 0;
     int sign = 1;
     int i = 0;
@@ -345,7 +345,7 @@ int to_int(const std::string &str) {
  *  @param  str     const std::string&      the string
  *  @return         double                  the double float.
  */
-double to_double(const std::string &str) {
+inline double to_double(const std::string &str) {
     double x = 0.0, y = 1.0;
     double sign = 1.0;
     int i = 0;
@@ -366,7 +366,7 @@ double to_double(const std::string &str) {
     return x * sign;
 }
 
-std::string to_str(int x) {
+inline std::string to_str(int x) {
     std::ostringstream s;
     s << x;
     return s.str();

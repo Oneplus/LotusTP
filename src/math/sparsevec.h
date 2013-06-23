@@ -43,11 +43,11 @@ public:
         return _vec.end();
     }
 
-    int dim() const {
+    inline int dim() const {
         return _vec.size();
     }
 
-    double L2() {
+    inline double L2() {
         double norm = 0;
         for (const_iterator itx = _vec.begin();
                 itx != _vec.end(); ++ itx) {
@@ -57,7 +57,7 @@ public:
         return norm;
     }
 
-    void add(const SparseVec &other,
+    inline void add(const SparseVec &other,
             const double scale) {
         for (const_iterator itx = other.begin();
                 itx != other.end(); ++ itx) {
@@ -67,7 +67,7 @@ public:
         }
     }
 
-    void add(const FeatureVector * other,
+    inline void add(const FeatureVector * other,
             const double scale) {
         if (!other) {
             return;
@@ -88,11 +88,11 @@ public:
         }
     }
 
-    void zero() {
+    inline void zero() {
         _vec.clear();
     }
 
-    void str(ostream & out, string prefix = "  ") const {
+    inline void str(ostream & out, string prefix = "  ") const {
         int i = 0;
         out << "{ ";
         for (const_iterator itx = _vec.begin();

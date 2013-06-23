@@ -13,7 +13,6 @@
 
 using namespace std;
 using namespace ltp::parser;
-using namespace ltp::utility;
 
 void usage(const char * msg) {
     // cerr << "lgdpj(lightweight)" << VERSION << " --- {lzh}@ir.hit.edu.cn" << endl;
