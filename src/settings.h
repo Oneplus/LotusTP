@@ -34,6 +34,19 @@ const double EPS            =   1e-10;
 const size_t CMP            =   0;
 const size_t INCMP          =   1;
 
+enum {
+    DEPU,       //  Unlabeled Standard Features
+    DEPL,       //  Labeled Standard Features
+    SIBU,       //  Unlabeled Sibling Features
+    SIBL,       //  Labeled Sibling Features
+    GRDU,       //  Unlabeled Grandchild Feature
+    GRDL,       //  Labeled Grandchild Feature
+    GRDSIBU,    //  Unlabeled Grand Sibling Features
+    GRDSIBL,
+    POSU,
+    POSB,
+};
+
 }       //  end for namespace parser
 }       //  end for namespace ltp
 #endif  //  end for __SETTINGS_H__

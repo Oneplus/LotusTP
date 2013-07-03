@@ -53,6 +53,15 @@ inline void instance_verify(const Instance * inst, ostream & out, bool show_feat
     out << "}" << endl;
 }
 
+inline Instance * instance_example() {
+    Instance * inst = new Instance;
+    inst->forms.push_back("ROOT");  inst->postags.push_back("#RT"); inst->heads.push_back(-1);
+    inst->forms.push_back("We");    inst->postags.push_back("NN");  inst->heads.push_back(1);
+    inst->forms.push_back("like");  inst->postags.push_back("VV");  inst->heads.push_back(0);
+    inst->forms.push_back("cat");   inst->postags.push_back("NN");  inst->heads.push_back(1);
+    return inst;
+}
+
 }       //  end for namespace parser
 }       //  end for namespace ltp
 

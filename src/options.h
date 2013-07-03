@@ -36,6 +36,10 @@ struct FeatureOptions {
     bool use_dependency_surrounding;
     bool use_dependency_between;
 
+    bool use_sibling;
+    bool use_sibling_basic;
+    bool use_sibling_linear;
+
     // automaticall calculate
     bool use_distance_in_dependency_features;
     bool use_unlabeled_dependency;
@@ -43,7 +47,6 @@ struct FeatureOptions {
 
     bool use_lemma;
     bool use_coarse_postag;
-    bool use_sibling;
     bool use_grand;
 };
 

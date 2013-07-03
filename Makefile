@@ -9,7 +9,7 @@ all: ./build/Makefile
 	@ $(MAKE) -C build
 
 ./build/Makefile:
-	@ (cd build >/dev/null 2>&1 && cmake ..)
+	@ (cd build >/dev/null 2>&1 && cmake -DCMAKE_BUILD_TYPE=RELEASE ..)
 
 test:
 	@ (cd build >/dev/null 2>&1 && ctest --output-on-failure .)

@@ -147,7 +147,7 @@ public:
         timeinfo = localtime( &rawtime );
         strftime(buffer,
                 80,
-                "%Y/%m/%d %H:%S:%M",
+                "%Y/%m/%d %H:%M:%S",
                 timeinfo);
 
         int i;

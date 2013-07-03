@@ -169,6 +169,12 @@ public:
     Mat3<FeatureVector *>   labeled_dependency_features;
     Mat3<double>            labeled_dependency_scores;
 
+    Mat3<FeatureVector *>   sibling_features;
+    Mat3<double>            sibling_scores;
+
+    Mat4<FeatureVector *>   labeled_sibling_features;
+    Mat4<double>            labeled_sibling_scores;
+
     vector<int>             verb_cnt;
     vector<int>             conj_cnt;
     vector<int>             punc_cnt;

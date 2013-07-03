@@ -189,7 +189,7 @@ void Decoder1O::free_lattice() {
     }
 }
 
-void __BUILD_TREE(Instance * inst, const LatticeItem * item) {
+void Decoder1O::__BUILD_TREE(Instance * inst, const LatticeItem * item) {
     if (!item) {
         return;
     }
@@ -200,6 +200,7 @@ void __BUILD_TREE(Instance * inst, const LatticeItem * item) {
         inst->predicted_heads[item->_t] = item->_s;
 
         if (model_opt.labeled) {
+            // std::cout << "label: " << item->_label_s_t << std::endl;
             inst->predicted_deprelsidx[item->_t] = item->_label_s_t;
         }
     } else if (CMP == item->_comp) {

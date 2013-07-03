@@ -365,6 +365,148 @@ public:
     }
 };  //  end for class Mat3
 
+template <typename T>
+class Mat4 {
+private:
+    int nn;
+    int mm;
+    int kk;
+    int ll;
+    int tot_sz;
+    T ****v;
+
+public:
+    Mat4() : nn(0), mm(0), kk(0), ll(0), tot_sz(0), v(0) {}
+
+    ~Mat4() {
+        dealloc();
+    }
+
+    Mat4 & resize(const int n, const int m, const int k, const int l) {
+        if (n != nn || m != mm || k != kk || l != ll) {
+            dealloc();
+
+            nn = n;
+            mm = m;
+            kk = k;
+            ll = l;
+            tot_sz = n * m * k * l;
+
+            v = new T***[n];
+            v[0] = new T**[n * m];
+            v[0][0] = new T*[n * m * k];
+            v[0][0][0] = new T[n * m * k * l];
+
+            int i, j, z;
+
+            for (z = 1; z < k; ++ z) {
+                v[0][0][z] = v[0][0][z - 1] + l;
+            }
+
+            for (j = 1; j < m; ++ j) {
+                v[0][j] = v[0][j - 1] + k;
+                v[0][j][0] = v[0][j - 1][0] + k * l;
+
+                for (z = 1; z < k; ++ z) {
+                    v[0][j][z] = v[0][j][z - 1] + l;
+                }
+            }
+
+            for (i = 1; i < n; ++ i) {
+                v[i] = v[i - 1] + m;
+                v[i][0] = v[i - 1][0] + m * k;
+                v[i][0][0] = v[i - 1][0][0] + m * k * l;
+
+                for (z = 1; z < k; ++ z) {
+                    v[i][0][z] = v[i][0][z - 1] + l;
+                }
+
+                for (j = 1; j < m; ++ j) {
+                    v[i][j] = v[i][j - 1] + k;
+                    v[i][j][0] = v[i][j - 1][0] + k * l;
+
+                    for (z = 1; z < k; ++ z) {
+                        v[i][j][z] = v[i][j][z - 1] + l;
+                    }
+                }
+            }
+        }
+    }
+
+    explicit Mat4(const int n, const int m, const int k, const int l) {
+        resize(n, m, k, l);
+    }
+
+    Mat4 & operator=(const T & a) {
+        for (int i = 0; i < nn; ++ i) {
+            for (int j = 0; j < mm; ++ j) {
+                for (int k = 0; k < kk; ++ k) {
+                    for (int l = 0; l < ll; ++ l) {
+                        v[i][j][k][l] = a;
+                    }
+                }
+            }
+        }
+        return *this;
+    }
+
+    inline T*** operator[](const int i) {
+        return v[i];
+    }
+
+    inline const T* const * const operator[](const int i) const {
+        return v[i];
+    }
+
+    inline int dim1() const {
+        return nn;
+    }
+
+    inline int dim2() const {
+        return mm;
+    }
+
+    inline int dim3() const {
+        return kk;
+    }
+
+    inline int dim4() const {
+        return ll;
+    }
+
+    inline int total_size() const {
+        return tot_sz;
+    }
+
+    inline void dealloc() {
+        if (v) {
+            delete [] (v[0][0][0]);
+            delete [] (v[0][0]);
+            delete [] (v[0]);
+            delete [] (v);
+            v = 0;
+            nn = 0;
+            mm = 0;
+            kk = 0;
+            ll = 0;
+            tot_sz = 0;
+        }
+    }
+
+    inline T * c_buf() {
+        if (v) {
+            return v[0][0][0];
+        } else {
+            return 0;
+        }
+    }
+
+
+private:
+    Mat4(const Mat4 & rhs) { }
+    Mat4  & operator =(const Mat4 & rhs) {}
+};
+
 }   //  end for namespace math
 }   //  end for namespace ltp
 

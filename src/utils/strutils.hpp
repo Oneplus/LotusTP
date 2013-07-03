@@ -367,9 +367,8 @@ inline double to_double(const std::string &str) {
 }
 
 inline std::string to_str(int x) {
-    std::ostringstream s;
-    s << x;
-    return s.str();
+    char buff[14];
+    return std::string(buff, sprintf(buff, "%d", x));
 }
 
 /*

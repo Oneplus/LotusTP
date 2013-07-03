@@ -3,19 +3,21 @@
 namespace ltp {
 namespace parser {
 
-size_t DictionaryCollections::dim() const{
-    return idx;
+DictionaryCollections::DictionaryCollections(int num_dicts) :
+    idx(0) {
+    dicts.resize( num_dicts );
+
+    for (int i = 0; i < num_dicts; ++ i) {
+        dicts[i] = new Dictionary( this );
+    }
 }
 
-Dictionary * DictionaryCollections::create_dict(const char * name) {
-    for (int i = 0; i < dicts.size(); ++ i) {
-        if ( strcmp(dicts[i]->dict_name.c_str(), name) == 0) {
-            return dicts[i];
-        }
-    }
-    Dictionary * dict = new Dictionary(name, this);
-    dicts.push_back(dict);
-    return dict;
+int DictionaryCollections::retrieve(int tid, const char * key, bool create) {
+    return dicts[tid]->retrieve(key, create);
+}
+
+size_t DictionaryCollections::dim() const{
+    return idx;
 }
 
 void DictionaryCollections::dump(ostream & out) {
@@ -27,8 +29,8 @@ void DictionaryCollections::dump(ostream & out) {
     out.write(reinterpret_cast<const char *>(&idx), sizeof(int));
     out.write(reinterpret_cast<const char *>(&sz), sizeof(unsigned int));
     for (int i = 0; i < dicts.size(); ++ i) {
-        strncpy(chunk, dicts[i]->dict_name.c_str(), 32);
-        out.write(chunk, 32);
+        // strncpy(chunk, dicts[i]->dict_name.c_str(), 32);
+        // out.write(chunk, 32);
 
         dicts[i]->database.dump(out);
     }
@@ -48,7 +50,7 @@ bool DictionaryCollections::load(istream & in) {
     for (unsigned i = 0; i < sz; ++ i) {
         in.read(chunk, 32);
 
-        Dictionary * dict = create_dict(chunk);
+        Dictionary * dict = new Dictionary(this);
         if (!dict->database.load(in)) {
             return false;
         }
@@ -58,7 +60,6 @@ bool DictionaryCollections::load(istream & in) {
 
     return true;
 }
-
 
 }   //  end for namespace parser
 }   //  end for namespace ltp

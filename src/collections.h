@@ -6,23 +6,54 @@
 #include "stringmap.hpp"
 #include "smartmap.hpp"
 
+#include "instance.h"
+
 namespace ltp {
 namespace parser {
 
 using namespace std;
 using namespace ltp::utility;
 
+/*
+ * declariation of dictionary
+ */
 class Dictionary;
 
+/*
+ *
+ *
+ *
+ *
+ */
 class DictionaryCollections {
 public:
-    DictionaryCollections() : idx(0) {}
+    DictionaryCollections(int num_dicts);
     ~DictionaryCollections() {}
 
-    Dictionary * create_dict(const char * name);
+    /*
+     * Dump the dictionary collections into a ostream
+     *
+     *  @param[out]     out     the output stream
+     */
     void dump(ostream & out);
+
+    /*
+     *
+     *
+     */
     bool load(istream & in);
+
+    /*
+     *
+     *
+     */
     size_t dim() const;
+
+    /*
+     *
+     *
+     */
+    int retrieve(int tid, const char * key, bool create);
 public:
     int idx;
 
@@ -32,12 +63,9 @@ private:
 
 class Dictionary {
 public:
-    Dictionary(const char * name,
-            DictionaryCollections * coll): 
-        dict_name(name), 
+    Dictionary(DictionaryCollections * coll): 
         collections(coll) {}
 
-    string                  dict_name;
     //StringMap<int>          database;
     SmartMap<int>           database;
     DictionaryCollections * collections;

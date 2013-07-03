@@ -1,7 +1,7 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
-#include "collections.h"
+#include "featurespace.h"
 #include "parameters.h"
 #include "options.h"
 
@@ -10,44 +10,65 @@ namespace parser {
 
 class Model {
 public:
-    Model() : _dim(-1) {}
+    Model() : 
+        _dim(-1), 
+        _num_deprels(-1), 
+        _num_postags(-1) {}
+
     ~Model() {}
 
     inline int num_deprels() {
-        return deprels.size();
+        if (_num_deprels < 0) {
+            // unlabeled case
+            if (0 == deprels.size()) {
+                _num_deprels = 1;
+            } else {
+                _num_deprels = deprels.size();
+            }
+        }
+
+        return _num_deprels;
     }
 
     inline int num_postags() {
+        if (_num_postags < 0) {
+            // unlabeled case
+            if (0 == postags.size()) {
+                _num_postags = 1;
+            } else {
+                _num_postags = postags.size();
+            }
+        }
+
         return postags.size();
     }
 
     inline int num_features() {
-        return collections.dim();
+        // return spaces.dim();
+        return 0;
     }
 
     inline int dim() {
         if (_dim < 0) {
-            _dim = 0;
-
-            if (feat_opt.use_unlabeled_dependency) {
-                _dim += collections.create_dict("dependency")->size();
-            } else {
-                _dim += (collections.create_dict("dependency")->size()) * num_deprels();
-            }
+            _dim = space.dim();
         }
 
         return _dim;
     }
 
+private:
+    int _num_deprels;
+    int _num_postags;
+
 public:
-    DictionaryCollections   collections;
+    FeatureSpace            space;
     Parameters              param;
 
     LabelCollections        postags;
     LabelCollections        deprels;
 
     void save(ostream & out) {
-        // write a signature
+/*        // write a signature
         char chunk[16] = {'l','g','d','p', 'j', 0};
         out.write(chunk, 16);
         unsigned int tmp;
@@ -119,12 +140,12 @@ public:
         write_uint(out, feature_offset);
         // cout << out.tellp() << endl;
         write_uint(out, parameter_offset);
-
+*/
         // out.seekp(0, std::ios::end);
     }
 
     bool load(istream & in) {
-        char chunk[16];
+/*        char chunk[16];
         in.read(chunk, 16);
         if (strcmp(chunk, "lgdpj")) {
             return false;
@@ -184,7 +205,7 @@ public:
             std::cout << "param failed" << std::endl;
             return false;
         }
-
+*/
         return true;
     }
 
