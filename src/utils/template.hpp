@@ -5,22 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef _WIN32
-#include <hash_map>
-#else
-#include <ext/hash_map>
-struct __Default_String_HashFunction{
-    size_t operator()(const std::string& s) const {
-        unsigned int _seed = 131; // 31 131 1313 13131 131313 etc..
-        unsigned int _hash = 0;
-        for(std::size_t i = 0; i < s.size(); i++) {
-            _hash = (_hash * _seed) + s[i];
-        }
-        return size_t(_hash);
-    }
-};
-#endif
-
 namespace ltp {
 namespace utility {
 

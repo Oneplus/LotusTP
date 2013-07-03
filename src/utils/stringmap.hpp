@@ -33,7 +33,7 @@
 #ifdef _WIN32
 #include <hash_map>
 #else
-#include <ext/hash_map>
+#include <tr1/unordered_map>
 #endif
 
 #include <string.h>
@@ -83,7 +83,7 @@ public:
 #ifdef _WIN32
     typedef stdext::hash_map<const char *, T, char_array_hash> internal_map_t;
 #else
-    typedef __gnu_cxx::hash_map<const char *, T, char_array_hash, char_array_equal> internal_map_t;
+    typedef std::tr1::unordered_map<const char *, T, char_array_hash, char_array_equal> internal_map_t;
 #endif  // end for _WIN32
     typedef typename internal_map_t::iterator       iterator;
     typedef typename internal_map_t::const_iterator const_iterator;

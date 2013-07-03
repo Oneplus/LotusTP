@@ -8,7 +8,7 @@
 #ifdef _WIN32
 #include <hash_map>
 #else
-#include <ext/hash_map>
+#include <tr1/unordered_map>
 struct StringHashFunc{
     size_t operator()(const std::string& s) const {
         unsigned int _seed = 131; // 31 131 1313 13131 131313 etc..
@@ -40,8 +40,8 @@ private:
     typedef stdext::hash_map<string, string>                internal_entries_t;
     typedef stdext::hash_map<string, internal_entries_t>    internal_sections_t;
 #else
-    typedef __gnu_cxx::hash_map<string, string, StringHashFunc>             internal_entries_t;
-    typedef __gnu_cxx::hash_map<string, internal_entries_t, StringHashFunc> internal_sections_t;
+    typedef std::tr1::unordered_map<string, string, StringHashFunc>             internal_entries_t;
+    typedef std::tr1::unordered_map<string, internal_entries_t, StringHashFunc> internal_sections_t;
 #endif  //  end for _WIN32
     internal_sections_t sec;
 

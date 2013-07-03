@@ -2,6 +2,7 @@
 #define __STRING_VECTOR_H__
 
 #include <iostream>
+#include <stdio.h>
 #include <string.h>
 
 namespace ltp {

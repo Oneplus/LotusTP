@@ -6,7 +6,8 @@
 #ifdef _WIN32
 #include <hash_map>
 #else
-#include <ext/hash_map>
+//#include <ext/hash_map>
+#include <tr1/unordered_map>
 #endif
 
 namespace ltp {
@@ -19,7 +20,8 @@ public:
 #ifdef _WIN32
     typedef stdext::hash_map<int,double> internal_sparsevec_t;
 #else
-    typedef __gnu_cxx::hash_map<int, double> internal_sparsevec_t;
+    typedef std::tr1::unordered_map<int, double> internal_sparsevec_t;
+    // typedef __gnu_cxx::hash_map<int, double> internal_sparsevec_t;
 #endif  //  end for _WIN32
     typedef internal_sparsevec_t::iterator       iterator;
     typedef internal_sparsevec_t::const_iterator const_iterator;

@@ -134,7 +134,7 @@ public:
      *  @param  fmt     the format string
      *  @param  va_arg
      */
-    inline void write_log(int lvl, char * fmt, ...) {
+    inline void write_log(int lvl, const char * fmt, ...) {
         if (lvl < log_lvl) {
             return;
         }

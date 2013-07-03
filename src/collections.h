@@ -70,21 +70,18 @@ public:
     SmartMap<int>           database;
     DictionaryCollections * collections;
 
-    int retrieve(const char * key, bool create) {
-        int val = 0;
-        if (database.contains(key)) {
-            // database.unsafe_get(key, val);
-            database.get(key, val);
+    inline int retrieve(const char * key, bool create) {
+        int val;
+
+        if (database.get(key, val)) {
             return val;
         } else {
             if (create) {
                 val = collections->idx;
                 database.set(key, val);
                 // database.unsafe_set(key, val);
-                collections->idx ++;
+                ++ collections->idx;
                 return val;
-            } else {
-                return -1;
             }
         }
 

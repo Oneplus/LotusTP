@@ -128,5 +128,71 @@ int FeatureSpace::dim() {
     return _offset;
 }
 
+void FeatureSpace::save(std::ostream & out) {
+    if (feat_opt.use_dependency) {
+        groups[DEP]->dump(out);
+    }
+
+    /*if (feat_opt.use_sibling) {
+        groups[SIB]->dump(out);
+    }
+
+    if (feat_opt.use_grand) {
+        groups[GRD]->dump(out);
+    }
+
+    if (feat_opt.use_grand_sibling) {
+        groups[GRDSIB]->dump(out);
+    }
+
+    if (feat_opt.use_postag_unigram) {
+        groups[POSU]->dump(out);
+    }
+
+    if (feat_opt.use_postag_bigram) {
+        groups[POSB]->dump(out);
+    }*/
+}
+
+int FeatureSpace::load(std::istream & in) {
+    int ret = 0;
+
+    if (feat_opt.use_dependency) {
+        groups[DEP] = new DictionaryCollections( DEPExtractor::num_templates() );
+        if (!groups[DEP]->load(in)) {
+            return -1;
+        }
+        ++ ret;
+    }
+
+    /*if (feat_opt.use_sibling) {
+        groups[SIB] = new DictionaryGroup( SIBExtractor::num_templates() );
+        ++ ret;
+    }
+
+    if (feat_opt.use_grand) {
+        groups[GRD] = new DictionaryGroup( GRDExtractor::num_templates() );
+        ++ ret;
+    }
+
+    if (feat_opt.use_grand_sibling) {
+        groups[GRDSIB] = new DictionaryGroup( GRDSIBExtractor::num_template() );
+        ++ ret;
+    }
+
+    if (feat_opt.use_postag_unigram) {
+        groups[POSU] = new DictionaryGroup( POSUExtractor::num_template() );
+        ++ ret;
+    }
+
+    if (feat_opt.use_postag_bigram) {
+        groups[POSB] = new DictionaryGroup( POSBExtractor::num_template() );
+        ++ ret;
+    }*/
+
+    return ret;
+
+}
+
 }   //  end for namespace parser
 }   //  end for namespace ltp

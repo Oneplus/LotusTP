@@ -75,9 +75,27 @@ public:
      */
     int index(int gid, int tid, const char * key, int lid = 0);
 
+    /*
+     * Get number of dimension of the features. For example, supposing there
+     * are two groups of features whose number of feature is 10 and 20. and 6
+     * is the number of dependency relations, then 10 * 6 + 20 * 6 is return.
+     *
+     *  @return     int     the number of labels
+     */
     int dim();
 
+    /*
+     * Get number of dimension of the features. For example, supposing there
+     * are two groups of features whose number of feature is 10 and 20, then
+     * 10 + 20 is return.
+     *
+     *  @return     int     the number of labels
+     */
     int num_features();
+
+    void save(ostream & out);
+
+    int load(istream & in);
 private:
     const static int NUM_FEATURE_GROUPS = 6;
 
