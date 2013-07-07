@@ -454,7 +454,7 @@ public:
         return v[i];
     }
 
-    inline const T* const * const operator[](const int i) const {
+    inline const T* const * const * operator[](const int i) const {
         return v[i];
     }
 

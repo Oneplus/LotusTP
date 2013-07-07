@@ -1,5 +1,9 @@
 #include "parser.h"
 #include "options.h"
+#include "decoder1o.h"
+#include "decoder2o.h"
+
+#include "treeutils.hpp"
 
 namespace ltp {
 namespace parser {
@@ -108,8 +112,8 @@ bool Parser::parse_cfg(utility::ConfigParser & cfg) {
     feat_opt.use_dependency_bigram      =   false;
     feat_opt.use_dependency_surrounding =   false;
     feat_opt.use_dependency_between     =   false;
-    feat_opt.use_distance_in_dependency_features = true;
-    // feat_opt.use_distance_in_dependency_features = false;
+    feat_opt.use_distance_in_features   =   true;
+    // feat_opt.use_distance_in_features = false;
 
     if (cfg.has_section("feature")) {
         if (cfg.get_integer("feature", "use-postag", intbuf)) {
@@ -150,6 +154,25 @@ bool Parser::parse_cfg(utility::ConfigParser & cfg) {
 
         feat_opt.use_labeled_dependency = (model_opt.labeled == true &&
                 feat_opt.use_dependency);
+
+        if (cfg.get_integer("feature", "use-sibling", intbuf)) {
+            feat_opt.use_sibling = (intbuf == 1);
+        }
+
+        if (cfg.get_integer("feature", "use-sibling-basic", intbuf)) {
+            feat_opt.use_sibling_basic = (intbuf == 1);
+        }
+
+        if (cfg.get_integer("feature", "use-sibling-linear", intbuf)) {
+            feat_opt.use_sibling_basic = (intbuf == 1);
+        }
+
+        // detrieve sibling type from configuration
+        feat_opt.use_unlabeled_sibling = (model_opt.labeled == false &&
+                feat_opt.use_sibling);
+
+        feat_opt.use_labeled_sibling = (model_opt.labeled == true &&
+                feat_opt.use_sibling);
     }
 }
 
@@ -182,45 +205,82 @@ void Parser::build_feature_space(void) {
     model->space.build_feature_space(model->num_deprels(), train_dat);
 }   //  end for build_feature_space
 
-void Parser::collect_unlabeled_dependency_features_of_one_instance(Instance * inst,
+void Parser::collect_unlabeled_features_of_one_instance(Instance * inst,
         const vector<int> & heads,
         SparseVec & vec ) {
-    for (int i = 1; i < inst->size(); ++ i) {
-        int hid = heads[i];
-        vec.add(inst->dependency_features[hid][i], 1.);
+
+    vec.zero();
+    if (feat_opt.use_dependency) {
+        for (treeutils::DEPIterator itx(heads); !itx.end(); ++ itx) {
+            int hid = itx.hid();
+            int cid = itx.cid();
+
+            vec.add(inst->dependency_features[hid][cid], 1.);
+        }
+    }
+
+    if (feat_opt.use_sibling) {
+        for (treeutils::SIBIterator itx(heads); !itx.end(); ++ itx) {
+            int hid = itx.hid();
+            int cid = itx.cid();
+            int sid = itx.sid();
+
+            vec.add(inst->sibling_features[hid][cid][sid], 1.);
+        }
     }
 }
 
-void Parser::collect_labeled_dependency_features_of_one_instance(Instance * inst,
+void Parser::collect_labeled_features_of_one_instance(Instance * inst,
         const vector<int> & heads,
         const vector<int> & deprelsidx,
-        SparseVec & vec ) {
-    for (int i = 1; i < inst->size(); ++ i) {
-        int hid = heads[i];
-        int relidx= deprelsidx[i];
-        vec.add(inst->labeled_dependency_features[hid][i][relidx], 1.);
+        SparseVec & vec) {
+
+    vec.zero();
+    if (feat_opt.use_dependency) {
+        for (treeutils::DEPIterator itx(heads); !itx.end(); ++ itx) {
+            int hid = itx.hid();
+            int cid = itx.cid();
+            int relidx = deprelsidx[cid];
+
+            vec.add(inst->labeled_dependency_features[hid][cid][relidx], 1.);
+        }
+    }
+
+    if (feat_opt.use_sibling) {
+        for (treeutils::SIBIterator itx(heads); !itx.end(); ++ itx) {
+            int hid = itx.hid();
+            int cid = itx.cid();
+            int sid = itx.sid();
+            int relidx = deprelsidx[cid];
+
+            vec.add(inst->labeled_sibling_features[hid][cid][sid][relidx], 1.);
+        }
     }
 }
 
 void Parser::collect_features_of_one_instance(Instance * inst, bool gold) {
-    if (gold && feat_opt.use_unlabeled_dependency) {
-        collect_unlabeled_dependency_features_of_one_instance(inst,
-                inst->heads,
-                inst->features);
-    } else if (gold && feat_opt.use_labeled_dependency) {
-        collect_labeled_dependency_features_of_one_instance(inst,
-                inst->heads,
-                inst->deprelsidx,
-                inst->features);
-    } else if (!gold && feat_opt.use_unlabeled_dependency) {
-        collect_unlabeled_dependency_features_of_one_instance(inst,
-                inst->predicted_heads,
-                inst->predicted_features);
-    } else if (!gold && feat_opt.use_labeled_dependency) {
-        collect_labeled_dependency_features_of_one_instance(inst,
-                inst->predicted_heads,
-                inst->predicted_deprelsidx,
-                inst->predicted_features);
+    if (gold) {
+        if (!model_opt.labeled) {
+            collect_unlabeled_features_of_one_instance(inst,
+                    inst->heads,
+                    inst->features);
+        } else {
+            collect_labeled_features_of_one_instance(inst,
+                    inst->heads,
+                    inst->deprelsidx,
+                    inst->features);
+        }
+    } else {
+        if (!model_opt.labeled) {
+            collect_unlabeled_features_of_one_instance(inst,
+                    inst->predicted_heads,
+                    inst->predicted_features);
+        } else {
+            collect_labeled_features_of_one_instance(inst,
+                    inst->predicted_heads,
+                    inst->predicted_deprelsidx,
+                    inst->predicted_features);
+        }
     }
 }
 
@@ -249,6 +309,7 @@ bool Parser::read_instances(const char * filename, vector<Instance *> & dat) {
 
 void Parser::extract_features(Instance * inst) {
     int len = inst->size();
+    int L   = model->num_deprels();
     FeatureSpace& space = model->space;
 
     if (feat_opt.use_dependency) {
@@ -257,8 +318,8 @@ void Parser::extract_features(Instance * inst) {
             inst->dependency_features.resize(len, len);
             inst->dependency_scores.resize(len, len);
         } else {
-            inst->labeled_dependency_features.resize(len, len, model->num_deprels());
-            inst->labeled_dependency_scores.resize(len, len, model->num_deprels());
+            inst->labeled_dependency_features.resize(len, len, L);
+            inst->labeled_dependency_scores.resize(len, len, L);
         }
 
         vector< StringVec >  cache;
@@ -268,80 +329,155 @@ void Parser::extract_features(Instance * inst) {
 
         cache.resize( N );
 
-        for (int hid = 0; hid < len; ++ hid) {
-            for (int cid = 0; cid < len; ++ cid) {
+        for (treeutils::DEPTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
+            int hid = itx.hid();
+            int cid = itx.cid();
 
-                if (!model_opt.labeled) {
-                    inst->dependency_features[hid][cid] = NULL;
-                    inst->dependency_scores[hid][cid] = 0.;
-                } else {
-                    for (int l = 0; l < model->num_deprels(); ++ l) {
-                        inst->labeled_dependency_features[hid][cid][l] = NULL;
-                        inst->labeled_dependency_scores[hid][cid][l] = 0.;
+            if (!model_opt.labeled) {
+                inst->dependency_features[hid][cid] = NULL;
+                inst->dependency_scores[hid][cid] = 0.;
+            } else {
+                for (int l = 0; l < model->num_deprels(); ++ l) {
+                    inst->labeled_dependency_features[hid][cid][l] = NULL;
+                    inst->labeled_dependency_scores[hid][cid][l] = 0.;
+                }
+            }
+
+            if (hid == cid) {
+                continue;
+            }
+
+            // here the self-implementated String Vector is little
+            // fasteer than the list<string>
+            for (int i = 0; i < N; ++ i) {
+                cache[i].clear();
+            }
+
+            DEPExtractor::extract2o(inst, hid, cid, cache);
+            cache_again.clear();
+
+            for (int tid = 0; tid < cache.size(); ++ tid) {
+                for (int itx = 0; itx < cache[tid].size(); ++ itx) {
+                    int idx = model->space.index(FeatureSpace::DEP, tid, cache[tid][itx], 0);
+                    // std::cout << "idx: " << idx << std::endl;
+                    if (idx >= 0) {
+                        cache_again.push_back(idx);
                     }
                 }
+            }
 
-                if (hid == cid) {
-                    continue;
-                }
+            int num_feat = cache_again.size();
 
-                // here the self-implementated String Vector is little
-                // fasteer than the list<string>
-                for (int i = 0; i < N; ++ i) {
-                    cache[i].clear();
-                }
+            if (!model_opt.labeled) {
+                inst->dependency_features[hid][cid] = new FeatureVector;
+                inst->dependency_features[hid][cid]->n = num_feat;
+                inst->dependency_features[hid][cid]->idx = 0;
+                inst->dependency_features[hid][cid]->val = 0;
 
-                DEPExtractor::extract2o(inst,
-                        hid,
-                        cid,
-                        cache);
-
-                cache_again.clear();
-
-                for (int tid = 0; tid < cache.size(); ++ tid) {
-                    for (int itx = 0; itx < cache[tid].size(); ++ itx) {
-                        int idx = model->space.index(FeatureSpace::DEP, tid, cache[tid][itx], 0);
-                        // std::cout << "idx: " << idx << std::endl;
-                        if (idx >= 0) {
-                            cache_again.push_back(idx);
-                        }
+                if (num_feat > 0) {
+                    inst->dependency_features[hid][cid]->idx = new int[num_feat];
+                    for (int j = 0; j < num_feat; ++ j) {
+                        inst->dependency_features[hid][cid]->idx[j] = cache_again[j];
                     }
                 }
-
-                int num_feat = cache_again.size();
-
-                if (!model_opt.labeled) {
-
-                    inst->dependency_features[hid][cid] = new FeatureVector;
-                    inst->dependency_features[hid][cid]->n = num_feat;
-                    inst->dependency_features[hid][cid]->idx = 0;
-                    inst->dependency_features[hid][cid]->val = 0;
+            } else {
+                for (int l = 0; l < model->num_deprels(); ++ l) {
+                    inst->labeled_dependency_features[hid][cid][l] = new FeatureVector;
+                    inst->labeled_dependency_features[hid][cid][l]->n = num_feat;
+                    inst->labeled_dependency_features[hid][cid][l]->idx = 0;
+                    inst->labeled_dependency_features[hid][cid][l]->val = 0;
 
                     if (num_feat > 0) {
-                        inst->dependency_features[hid][cid]->idx = new int[num_feat];
+                        inst->labeled_dependency_features[hid][cid][l]->idx = new int[num_feat];
                         for (int j = 0; j < num_feat; ++ j) {
-                            inst->dependency_features[hid][cid]->idx[j] = cache_again[j];
-                        }
-                    }
-                } else {
-                    for (int l = 0; l < model->num_deprels(); ++ l) {
-                        inst->labeled_dependency_features[hid][cid][l] = new FeatureVector;
-                        inst->labeled_dependency_features[hid][cid][l]->n = num_feat;
-                        inst->labeled_dependency_features[hid][cid][l]->idx = 0;
-                        inst->labeled_dependency_features[hid][cid][l]->val = 0;
-
-                        if (num_feat > 0) {
-                            inst->labeled_dependency_features[hid][cid][l]->idx = new int[num_feat];
-                            for (int j = 0; j < num_feat; ++ j) {
-                                inst->labeled_dependency_features[hid][cid][l]->idx[j] = (
-                                        cache_again[j] + l);
-                            }
+                            inst->labeled_dependency_features[hid][cid][l]->idx[j] = (
+                                    cache_again[j] + l);
                         }
                     }
                 }
-            }   //  end for for cid = 1; cid < len; ++ cid
-        }   //  end for hid = 0; hid < len; ++ hid
-    }
+            }
+        }   //  end for DEPTreeSpaceIterator itx
+    }   //  end for feat_opt.use_dependency
+
+    if (feat_opt.use_sibling) {
+        if (!model_opt.labeled) {
+            inst->sibling_features.resize(len, len, len);
+            inst->sibling_scores.resize(len, len, len);
+        } else {
+            inst->labeled_sibling_features.resize(len, len, len, L);
+            inst->labeled_sibling_scores.resize(len, len, len, L);
+        }
+
+        int N = SIBExtractor::num_templates();
+
+        vector< StringVec > cache;
+        vector< int > cache_again;
+
+        cache.resize(N);
+
+        for (treeutils::SIBTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
+            int hid = itx.hid();
+            int cid = itx.cid();
+            int sid = itx.sid();
+
+            if (!model_opt.labeled) {
+                inst->sibling_features[hid][cid][sid] = 0;
+                inst->sibling_scores[hid][cid][sid] = 0;
+            } else {
+                for (int l = 0; l < L; ++ l) {
+                    inst->labeled_sibling_features[hid][cid][sid][l] = 0;
+                    inst->labeled_sibling_features[hid][cid][sid][l] = 0;
+                }
+            }
+
+            for (int i = 0; i < N; ++ i) {
+                cache[i].clear();
+            }
+
+            SIBExtractor::extract3o(inst, hid, cid, sid, cache);
+            cache_again.clear();
+
+            //
+            for (int tid = 0; tid < cache.size(); ++ tid) {
+                for (int itx = 0; itx < cache[tid].size(); ++ itx) {
+                    int idx = model->space.index(FeatureSpace::SIB, tid, cache[tid][itx]);
+                    if (idx >= 0) {
+                        cache_again.push_back(idx);
+                    }
+                }
+            }
+
+            int num_feat = cache_again.size();
+
+            if (!model_opt.labeled) {
+                inst->sibling_features[hid][cid][sid] = new FeatureVector;
+                inst->sibling_features[hid][cid][sid]->n = num_feat;
+                inst->sibling_features[hid][cid][sid]->idx = 0;
+                inst->sibling_features[hid][cid][sid]->val = 0;
+
+                if (num_feat > 0) {
+                    inst->sibling_features[hid][cid][sid]->idx = new int[num_feat];
+                    for (int j = 0; j < num_feat; ++ j) {
+                        inst->sibling_features[hid][cid][sid]->idx[j] = cache_again[j];
+                    }
+                }
+            } else {
+                for (int l = 0; l < model->num_deprels(); ++ l) {
+                    inst->labeled_sibling_features[hid][cid][sid][l] = new FeatureVector;
+                    inst->labeled_sibling_features[hid][cid][sid][l]->n = num_feat;
+                    inst->labeled_sibling_features[hid][cid][sid][l]->idx = 0;
+                    inst->labeled_sibling_features[hid][cid][sid][l]->val = 0;
+                    if (num_feat > 0) {
+                        inst->labeled_sibling_features[hid][cid][sid][l]->idx = new int[num_feat];
+                        for (int j = 0; j < num_feat; ++ j) {
+                            inst->labeled_sibling_features[hid][cid][sid][l]->idx[j] = (
+                                    cache_again[j] + l);
+                        }
+                    }
+                }   //  end for if model_opt.labeled
+            }
+        }   //  end for SIBTreeSpaceIterator itx
+    }   //  end for feat_opt.use_sibling
 }
 
 void Parser::train(void) {
@@ -377,12 +513,22 @@ void Parser::train(void) {
     model->param.realloc(model->dim());
     TRACE_LOG("Allocate a parameter vector of [%d] dimension.", model->dim());
 
-    if (!model_opt.labeled) {
-        decoder = new Decoder1O();
-        TRACE_LOG("1st-Order Decoder without label is configured.");
-    } else {
-        decoder = new Decoder1O(model->num_deprels());
-        TRACE_LOG("1st-Order Decoder with [%d] labels is configured.", model->num_deprels());
+    if (model_opt.decoder_name == "1o") {
+        if (!model_opt.labeled) {
+            decoder = new Decoder1O();
+            TRACE_LOG("1st-Order Decoder without label is configured.");
+        } else {
+            decoder = new Decoder1O(model->num_deprels());
+            TRACE_LOG("1st-Order Decoder with [%d] labels is configured.", model->num_deprels());
+        }
+    } else if (model_opt.decoder_name == "2o-sib") {
+        if (!model_opt.labeled) {
+            decoder = new Decoder2O();
+            TRACE_LOG("2nd-Order Decoder without label is configured.");
+        } else {
+            decoder = new Decoder2O(model->num_deprels());
+            TRACE_LOG("2nd-Order Decoder with [%d] labels is configured.", model->num_deprels());
+        }
     }
 
     for (int iter = 0; iter < train_opt.max_iter; ++ iter) {
@@ -393,7 +539,7 @@ void Parser::train(void) {
             calculate_score(train_dat[i], model->param);
             decoder->decode(train_dat[i]);
 
-            build_features_of_one_instance(train_dat[i], false);
+            collect_features_of_one_instance(train_dat[i], false);
 
             // instance_verify(train_dat[i], cout, true);
 
@@ -483,7 +629,7 @@ void Parser::evaluate(void) {
 
         // instance_verify(holdout_dat[i], cout, true);
 #if DEBUG
-        build_features_of_one_instance(holdout_dat[i], false);
+        collect_features_of_one_instance(holdout_dat[i], false);
         instance_verify(holdout_dat[i], cout, true);
 #endif //   end for DEBUG
 
@@ -507,6 +653,177 @@ void Parser::evaluate(void) {
     }
 
     holdout_dat.clear();
+}
+
+void Parser::test() {
+    double before = get_time();
+    const char * model_file = test_opt.model_file.c_str();
+    ifstream mfs(model_file, std::ifstream::binary);
+
+    if (!mfs) {
+        return;
+    }
+
+    model = new Model;
+    if (!model->load(mfs)) {
+        return;
+    }
+
+    TRACE_LOG("Number of deprels [%d]", model->num_deprels());
+    TRACE_LOG("Number of dimension [%d]", model->dim());
+    TRACE_LOG("Number of features [%d]", model->num_features());
+    TRACE_LOG("Labeled: %s", (model_opt.labeled ? "true" : "fales"));
+    TRACE_LOG("Decoder: %s", model_opt.decoder_name.c_str());
+    TRACE_LOG("Dependency features unigram:     %s", 
+            (feat_opt.use_dependency_unigram ? "true" : "false"));
+    TRACE_LOG("Dependency features bigram:      %s", 
+            (feat_opt.use_dependency_bigram ? "true" : "false"));
+    TRACE_LOG("Dependency features surrounding: %s", 
+            (feat_opt.use_dependency_surrounding ? "true" : "false"));
+    TRACE_LOG("Dependency features between:     %s", 
+            (feat_opt.use_dependency_between ? "true" : "false"));
+
+    const char * test_file = test_opt.test_file.c_str();
+
+    ifstream f(test_file);
+    if (!f) {
+        return;
+    }
+
+    CoNLLReader reader(f);
+
+    Instance * inst = NULL;
+
+    if (!model_opt.labeled) {
+        decoder = new Decoder1O();
+    } else {
+        decoder = new Decoder1O(model->num_deprels());
+    }
+
+    int head_correct = 0;
+    int label_correct = 0;
+    int total_rels = 0;
+
+    cerr << get_time() - before << endl;
+    before = get_time();
+    while ((inst = reader.next())) {
+
+        if (model_opt.labeled) {
+            inst->deprelsidx.resize(inst->size());
+            for (int i = 1; i < inst->size(); ++ i) {
+                inst->deprelsidx[i] = model->deprels.index(inst->deprels[i].c_str());
+            }
+        }
+
+        extract_features(inst);
+        calculate_score(inst, model->param);
+
+        decoder->decode(inst);
+
+        instance_verify(inst, cout, true);
+
+        total_rels += inst->num_rels();
+        head_correct += inst->num_correct_heads();
+        label_correct += inst->num_correct_heads_and_labels();
+
+        delete inst;
+    }
+
+    TRACE_LOG("UAS: %.4lf ( %d / %d )", (double)head_correct / total_rels, head_correct, total_rels);
+
+    if (model_opt.labeled) {
+        TRACE_LOG("LAS: %.4lf ( %d / %d )", 
+                (double)label_correct / total_rels, 
+                label_correct, 
+                total_rels);
+    }
+
+    double after = get_time();
+    cerr << after - before << endl;
+    sleep(1000000);
+}
+
+
+void Parser::calculate_score(Instance * inst, const Parameters& param, bool use_avg) {
+    int len = inst->size();
+    int L = model->num_deprels();
+
+    if (feat_opt.use_postag_unigram) {
+        for (int i = 0; i < len; ++ i) {
+            inst->postag_unigram_scores[i] = 0.;
+            FeatureVector * fv = inst->postag_unigram_features[i];
+            inst->postag_unigram_scores[i] = param.dot(fv, false);
+        }
+    }   //  end if feat_opt.use_postag_unigram
+
+    if (feat_opt.use_unlabeled_dependency) {
+        for (treeutils::DEPTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
+            int hid = itx.hid();
+            int cid = itx.cid();
+
+            FeatureVector * fv = inst->dependency_features[hid][cid];
+            inst->dependency_scores[hid][cid] = DOUBLE_NEG_INF;
+
+            if (!fv) {
+                continue;
+            }
+
+            inst->dependency_scores[hid][cid] = param.dot(fv, use_avg);
+        }
+    }   //  end if feat_opt.use_unlabeled_dependency
+
+    if (feat_opt.use_labeled_dependency) {
+         for (treeutils::DEPTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
+             int hid = itx.hid();
+             int cid = itx.cid();
+             for (int l = 0; l < L; ++ l) {
+                 FeatureVector * fv = inst->labeled_dependency_features[hid][cid][l];
+                 inst->labeled_dependency_scores[hid][cid][l] = DOUBLE_NEG_INF;
+
+                 if (!fv) {
+                     continue;
+                 }
+
+                 inst->labeled_dependency_scores[hid][cid][l] = param.dot(fv, use_avg);
+            }
+        }
+    }   //  end if feat_opt.use_labeled_dependency
+
+    if (feat_opt.use_unlabeled_sibling) {
+        for (treeutils::SIBTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
+            int hid = itx.hid();
+            int cid = itx.cid();
+            int sid = itx.sid();
+
+            FeatureVector * fv = inst->sibling_features[hid][cid][sid];
+            inst->sibling_scores[hid][cid][sid] = DOUBLE_NEG_INF;
+
+            if (!fv) {
+                continue;
+            }
+
+            inst->sibling_scores[hid][cid][sid] = param.dot(fv, use_avg);
+        }
+    }   //  end for if feat_opt.use_unlabeled_sibling
+
+    if (feat_opt.use_labeled_sibling) {
+        for (treeutils::SIBTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
+            int hid = itx.hid();
+            int cid = itx.cid();
+            int sid = itx.sid();
+
+            for (int l = 0; l < L; ++ l) {
+                FeatureVector * fv = inst->labeled_sibling_features[hid][cid][sid][l];
+                inst->labeled_sibling_scores[hid][cid][sid][l] = DOUBLE_NEG_INF;
+
+                if (!fv) {
+                    continue;
+                }
+
+                inst->labeled_sibling_scores[hid][cid][sid][l] = param.dot(fv, use_avg);
+            }
+        }
+    }   //  end for if feat_opt.use_labeled_sibling
 }
 
 }   //  end for namespace parser

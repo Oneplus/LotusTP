@@ -2,6 +2,7 @@
 #include "featurespace.h"
 #include "extractor.h"
 
+#include "treeutils.hpp"
 #include "strvec.hpp"
 #include "logging.hpp"
 
@@ -33,27 +34,45 @@ int FeatureSpace::build_feature_space(int num_deprels, const std::vector<Instanc
 
         int len = inst->size();
 
-        for (int j = 1; j < len; ++ j) {
-            int hid = inst->heads[j];
-            int cid = j;
+        if (feat_opt.use_dependency) {
+            int N = DEPExtractor::num_templates();
 
-            if (feat_opt.use_dependency) {
+            for (treeutils::DEPIterator itx(inst->heads); !itx.end(); ++ itx) {
+                int hid = itx.hid();
+                int cid = itx.cid();
+
                 //std::vector< std::list<std::string> > cache;
-                int N = DEPExtractor::num_templates();
                 std::vector< StringVec > cache;
                 cache.resize( N );
 
                 DEPExtractor::extractor()->extract2o(inst, hid, cid, cache);
                 for (int k = 0; k < cache.size(); ++ k) {
-                    /*for (std::list<std::string>::iterator itx = cache[k].begin();
-                            itx != cache[k].end();
-                            ++ itx) {*/
                     for (int itx = 0; itx < cache[k].size(); ++ itx) {
                         retrieve(DEP, k, cache[k][itx], true);
                     }
                 }
             }
-        }
+        }   //  end for if feat_opt.use_dependency
+
+        if (feat_opt.use_sibling) {
+            int N = SIBExtractor::num_templates();
+
+            for (treeutils::SIBIterator itx(inst->heads, feat_opt.use_last_sibling); !itx.end(); ++ itx) {
+                int hid = itx.hid();
+                int cid = itx.cid();
+                int sid = itx.sid();
+
+                std::vector< StringVec > cache;
+                cache.resize(N);
+                SIBExtractor::extract3o(inst, hid, cid, sid, cache);
+
+                for (int k = 0; k < cache.size(); ++ k) {
+                    for (int itx = 0; itx < cache[k].size(); ++ itx) {
+                        retrieve(SIB, k, cache[k][itx], true);
+                    }
+                }
+            }
+        }   //  end for if feat_opt.use_sibling
 
         if ((i+1) % model_opt.display_interval== 0) {
             TRACE_LOG("In building feature space, [%d] instances scanned.", i+1);
@@ -69,12 +88,13 @@ int FeatureSpace::build_feature_space(int num_deprels, const std::vector<Instanc
         _offset += groups[DEP]->dim() * _num_deprels;
     }
 
-    /*offsets[SIB] = offset;
+    offsets[SIB] = _offset;
     if (feat_opt.use_sibling) {
-        offset += groups[SIB]->dim() * _num_deprels;
+        _num_features += groups[SIB]->dim();
+        _offset += groups[SIB]->dim() * _num_deprels;
     }
 
-    offsets[GRD] = offset;
+    /*offsets[GRD] = offset;
     if (feat_opt.use_grand) {
         offset += groups[GRD]->dim() * _num_deprels;
     }
@@ -92,12 +112,12 @@ int FeatureSpace::allocate_dictionary_groups() {
         ++ ret;
     }
 
-    /*if (feat_opt.use_sibling) {
-        groups[SIB] = new DictionaryGroup( SIBExtractor::num_templates() );
+    if (feat_opt.use_sibling) {
+        groups[SIB] = new DictionaryCollections( SIBExtractor::num_templates() );
         ++ ret;
     }
 
-    if (feat_opt.use_grand) {
+    /*if (feat_opt.use_grand) {
         groups[GRD] = new DictionaryGroup( GRDExtractor::num_templates() );
         ++ ret;
     }
@@ -133,11 +153,11 @@ void FeatureSpace::save(std::ostream & out) {
         groups[DEP]->dump(out);
     }
 
-    /*if (feat_opt.use_sibling) {
+    if (feat_opt.use_sibling) {
         groups[SIB]->dump(out);
     }
 
-    if (feat_opt.use_grand) {
+    /*if (feat_opt.use_grand) {
         groups[GRD]->dump(out);
     }
 

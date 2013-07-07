@@ -11,7 +11,7 @@
 }while(0);
 
 #define PUSH_DIST(x) do { \
-    if (feat_opt.use_distance_in_dependency_features) { \
+    if (feat_opt.use_distance_in_features) { \
         (x).append(dist); \
         PUSH(x);    \
     } \
@@ -114,7 +114,14 @@ int POSUExtractor::extract1o(Instance * inst, int hid, vector<string> & cache) {
     }   //  end for if (use_pos_chars) 
 }   //  end for int extract
 
-// Initialize the static member, 
+// ================================================================ //
+// Dependency Features Extractor                                    //
+//  feature templates is listed in `extractor.h`                    //
+//  the DEPExtractor is a singleton, which only be construct once   //
+//  during the life of the program.                                 //
+// ================================================================ //
+
+// Initialize the static member
 DEPExtractor * DEPExtractor::instance_ = 0;
 vector<Template *> DEPExtractor::templates;
 
@@ -132,7 +139,7 @@ DEPExtractor::DEPExtractor() {
         templates.push_back(new Template("5={f-cid}-{dir}"));
         templates.push_back(new Template("6={p-cid}-{dir}"));
 
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             templates.push_back(new Template("1={f-hid}-{p-hid}-{dir}-{dist}"));
             templates.push_back(new Template("2={f-hid}-{dir}-{dist}"));
             templates.push_back(new Template("3={p-hid}-{dir}-{dist}"));
@@ -149,7 +156,7 @@ DEPExtractor::DEPExtractor() {
         templates.push_back(new Template("80={l-cid}-{p-cid}-{dir}"));
         templates.push_back(new Template("81={l-cid}-{dir}"));
 
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             templates.push_back(new Template("77={l-hid}-{p-hid}-{dir}-{dist}"));
             templates.push_back(new Template("78={l-hid}-{dir}-{dist}"));
             // templates.push_back(new Template("80={l-cid}-{p-cid}-{dir}"));
@@ -163,7 +170,7 @@ DEPExtractor::DEPExtractor() {
         templates.push_back(new Template("4C={f-cid}-{cp-cid}-{dir}"));
         templates.push_back(new Template("6C={cp-cid}-{dir}"));
 
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             templates.push_back(new Template("1C={f-hid}-{cp-hid}-{dir}-{dist}"));
             templates.push_back(new Template("3C={cp-hid}-{dir}-{dist}"));
             templates.push_back(new Template("4C={f-cid}-{cp-cid}-{dir}-{dist}"));
@@ -182,7 +189,7 @@ DEPExtractor::DEPExtractor() {
         templates.push_back(new Template("12?={f-hid}-{p-cid}-{dir}"));
         templates.push_back(new Template("13?={p-hid}-{f-cid}-{dir}"));
 
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             // templates.push_back(new Template("7={f-hid}-{p-hid}-{f-cid}-{p-cid}-{dir}-{dist}"));
             templates.push_back(new Template("8={p-hid}-{f-cid}-{p-cid}-{dir}-{dist}"));
             // templates.push_back(new Template("9={f-hid}-{f-cid}-{p-cid}-{dir}-{dist}"));
@@ -202,7 +209,7 @@ DEPExtractor::DEPExtractor() {
         templates.push_back(new Template("86={l-hid}-{p-hid}-{p-cid}-{dir}"));
         templates.push_back(new Template("87={l-hid}-{p-hid}-{l-cid}-{dir}"));
 
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             // templates.push_back(new Template("83={l-hid}-{p-hid}-{l-cid}-{p-cid}-{dir}-{dist}"));
             templates.push_back(new Template("84={p-hid}-{l-cid}-{p-cid}-{dir}-{dist}"));
             // templates.push_back(new Template("85={l-hid}-{p-hid}-{p-cid}-{dir}-{dist}"));
@@ -221,7 +228,7 @@ DEPExtractor::DEPExtractor() {
         templates.push_back(new Template("13C={p-hid}-{cp-cid}-{dir}"));
         templates.push_back(new Template("12?C={f-hid}-c{p-cid}-{dir}"));
         templates.push_back(new Template("13?C={cp-hid}-{f-cid}-{dir}"));
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             templates.push_back(new Template("7C={f-hid}-{cp-hid}-{f-cid}-{cp-cid}-{dir}-{dist}"));
             templates.push_back(new Template("8C={cp-hid}-{f-cid}-{cp-cid}-{dir}-{dist}"));
             templates.push_back(new Template("9C={f-hid}-{f-cid}-{cp-cid}-{dir}-{dist}"));
@@ -245,7 +252,7 @@ DEPExtractor::DEPExtractor() {
         templates.push_back(new Template("?20={p-hid-1}-{p-hid}-{p-hid+1}-{p-cid}-{dir}"));
         templates.push_back(new Template("?19={p-hid}-{p-cid-1}-{p-cid}-{p-cid+1}-{dir}"));
 
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             templates.push_back(new Template("14={p-hid}-{p-hid+1}-{p-cid}-{dir}-{dist}"));
             templates.push_back(new Template("15={p-hid}-{p-cid-1}-{p-cid}-{dir}-{dist}"));
             templates.push_back(new Template("16={p-hid}-{p-cid}-{p-cid+1}-{dir}-{dist}"));
@@ -269,7 +276,7 @@ DEPExtractor::DEPExtractor() {
         templates.push_back(new Template("?20C={cp-hid-1}-{cp-hid}-{cp-hid+1}-{cp-cid}-{dir}"));
         templates.push_back(new Template("?19C={cp-hid}-{cp-cid-1}-{cp-cid}-{cp-cid+1}-{dir}"));
 
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             templates.push_back(new Template("14C={cp-hid}-{cp-hid+1}-{cp-cid}-{dir}-{dist}"));
             templates.push_back(new Template("15C={cp-hid}-{cp-cid-1}-{cp-cid}-{dir}-{dist}"));
             templates.push_back(new Template("16C={cp-hid}-{cp-cid}-{cp-cid+1}-{dir}-{dist}"));
@@ -287,7 +294,7 @@ DEPExtractor::DEPExtractor() {
         templates.push_back(new Template("39={p-sid}-conj={conjcnt}-{p-lid}-{dir}"));
         templates.push_back(new Template("39={p-sid}-punc={punccnt}-{p-lid}-{dir}"));
 
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             templates.push_back(new Template("39={p-sid}-verb={verbcnt}-{p-lid}-{dir}-{dist}"));
             templates.push_back(new Template("39={p-sid}-conj={conjcnt}-{p-lid}-{dir}-{dist}"));
             templates.push_back(new Template("39={p-sid}-punc={punccnt}-{p-lid}-{dir}-{dist}"));
@@ -296,10 +303,9 @@ DEPExtractor::DEPExtractor() {
         // a dirty trick here, template 39 will generate several feature from on single
         // template, place this two template at last.
         templates.push_back(new Template("39={p-sid}-{p-bid}-{p-lid}-{dir}"));
-        if (feat_opt.use_distance_in_dependency_features) {
+        if (feat_opt.use_distance_in_features) {
             templates.push_back(new Template("39={p-sid}-{p-bid}-{p-lid}-{dir}-{dist}"));
         }
-
     }
 }
 
@@ -323,6 +329,8 @@ int DEPExtractor::num_templates() {
 
 int DEPExtractor::extract2o(Instance * inst, int hid, int cid, vector< StringVec > & cache) {
     int len = inst->size();
+
+    // if the postag count is not calculate, calculate the postag.
     if (inst->verb_cnt.size() == 0) {
         inst->verb_cnt.resize(len, 0);
         inst->conj_cnt.resize(len, 0);
@@ -382,7 +390,7 @@ int DEPExtractor::extract2o(Instance * inst, int hid, int cid, vector< StringVec
 
     int N = templates.size();
     int NN = (feat_opt.use_dependency_between ? 
-            (feat_opt.use_distance_in_dependency_features ? N - 2 : N - 1) : N);
+            (feat_opt.use_distance_in_features ? N - 2 : N - 1) : N);
 
     for (int i = (is_root ? 3 : 0); i < NN; ++ i) {
         templates[i]->render(data, feat);
@@ -406,81 +414,151 @@ int DEPExtractor::extract2o(Instance * inst, int hid, int cid, vector< StringVec
 }
 
 
-int SIBExtractor::extract3o(Instance * inst, int hid, int cid, int sid, vector<string> & cache) {
+// Initialize the static member, 
+SIBExtractor * SIBExtractor::instance_ = 0;
+vector<Template *> SIBExtractor::templates;
+
+// the constructor function.
+// guarantee that it's a singleton.
+SIBExtractor * SIBExtractor::extractor() {
+    if (0 == instance_) {
+        instance_ = new SIBExtractor;
+    }
+
+    return instance_;
+}
+
+SIBExtractor::SIBExtractor() {
+    templates.reserve(100);
+
+    if (feat_opt.use_sibling_basic) {
+        templates.push_back(new Template("30={p-hid}-{p-sid}-{p-cid}-{dir}"));
+        templates.push_back(new Template("31?={f-hid}-{p-sid}-{p-cid}-{dir}"));
+        templates.push_back(new Template("32?={p-hid}-{f-sid}-{p-cid}-{dir}"));
+        templates.push_back(new Template("33?={p-hid}-{p-sid}-{f-cid}-{dir}"));
+        templates.push_back(new Template("32={p-cid}-{p-sid}-{dir}"));
+        templates.push_back(new Template("36={f-cid}-{f-sid}-{dir}"));
+        templates.push_back(new Template("37={f-cid}-{p-sid}-{dir}"));
+        templates.push_back(new Template("38={p-cid}-{f-sid}-{dir}"));
+    }
+
+    if (feat_opt.use_sibling_basic && feat_opt.use_distance_in_features) {
+        templates.push_back(new Template("30={p-hid}-{p-sid}-{p-cid}-{dir}-{dist}"));
+        templates.push_back(new Template("31?={f-hid}-{p-sid}-{p-cid}-{dir}-{dist}"));
+        templates.push_back(new Template("32?={p-hid}-{f-sid}-{p-cid}-{dir}-{dist}"));
+        templates.push_back(new Template("33?={p-hid}-{p-sid}-{f-cid}-{dir}-{dist}"));
+        templates.push_back(new Template("32={p-cid}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("36={f-cid}-{f-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("37={f-cid}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("38={p-cid}-{f-sid}-{dir}-{dist}"));
+    }
+
+    if (feat_opt.use_sibling_basic && model_opt.labeled) {
+        templates.push_back(new Template("31={p-hid}-{p-sid}-{dir}"));
+        templates.push_back(new Template("33={f-hid}-{f-sid}-{dir}"));
+        templates.push_back(new Template("34={p-hid}-{f-sid}-{dir}"));
+        templates.push_back(new Template("35={f-hid}-{p-sid}-{dir}"));
+    }
+
+    if (feat_opt.use_sibling_basic && model_opt.labeled && feat_opt.use_distance_in_features) {
+        templates.push_back(new Template("31={p-hid}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("33={f-hid}-{f-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("34={p-hid}-{f-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("35={f-hid}-{p-sid}-{dir}-{dist}"));
+    }
+
+    if (feat_opt.use_sibling_linear) {
+        templates.push_back(new Template("66={p-cid}-{p-sid}-{p-sid+1}-{dir}"));
+        templates.push_back(new Template("67={p-cid}-{p-sid-1}-{p-sid}-{dir}"));
+        templates.push_back(new Template("68={p-cid}-{p-cid+1}-{p-sid}-{dir}"));
+        templates.push_back(new Template("69={p-cid-1}-{p-cid}-{p-sid}-{dir}"));
+        templates.push_back(new Template("70={p-cid-1}-{p-cid}-{p-sid}-{p-sid+1}-{dir}"));
+        templates.push_back(new Template("71={p-cid-1}-{p-cid}-{p-sid-1}-{p-sid}-{dir}"));
+        templates.push_back(new Template("72={p-cid}-{p-cid+1}-{p-sid}-{p-sid+1}-{dir}"));
+        templates.push_back(new Template("73={p-cid}-{p-cid+1}-{p-sid-1}-{p-sid}-{dir}"));
+    }
+
+    if (feat_opt.use_sibling_linear && feat_opt.use_distance_in_features) {
+        templates.push_back(new Template("66={p-cid}-{p-sid}-{p-sid+1}-{dir}-{dist}"));
+        templates.push_back(new Template("67={p-cid}-{p-sid-1}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("68={p-cid}-{p-cid+1}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("69={p-cid-1}-{p-cid}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("70={p-cid-1}-{p-cid}-{p-sid}-{p-sid+1}-{dir}-{dist}"));
+        templates.push_back(new Template("71={p-cid-1}-{p-cid}-{p-sid-1}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("72={p-cid}-{p-cid+1}-{p-sid}-{p-sid+1}-{dir}-{dist}"));
+        templates.push_back(new Template("73={p-cid}-{p-cid+1}-{p-sid-1}-{p-sid}-{dir}-{dist}"));
+    }
+
+
+    if (feat_opt.use_sibling_linear && model_opt.labeled) {
+        templates.push_back(new Template("58={p-hid}-{p-sid}-{p-sid+1}-{dir}"));
+        templates.push_back(new Template("59={p-hid}-{p-sid-1}-{p-sid}-{dir}"));
+        templates.push_back(new Template("60={p-hid}-{p-hid+1}-{p-sid}-{dir}"));
+        templates.push_back(new Template("61={p-hid-1}-{p-hid}-{p-sid}-{dir}"));
+        templates.push_back(new Template("62={p-hid-1}-{p-hid}-{p-sid}-{p-sid+1}-{dir}"));
+        templates.push_back(new Template("63={p-hid-1}-{p-hid}-{p-sid-1}-{p-sid}-{dir}"));
+        templates.push_back(new Template("64={p-hid}-{p-hid+1}-{p-sid}-{p-sid+1}-{dir}"));
+        templates.push_back(new Template("65={p-hid}-{p-hid+1}-{p-sid-1}-{p-sid}-{dir}"));
+    }   //  end for use sibling linear
+
+    if (feat_opt.use_sibling_linear && model_opt.labeled && feat_opt.use_distance_in_features) {
+        templates.push_back(new Template("58={p-hid}-{p-sid}-{p-sid+1}-{dir}-{dist}"));
+        templates.push_back(new Template("59={p-hid}-{p-sid-1}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("60={p-hid}-{p-hid+1}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("61={p-hid-1}-{p-hid}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("62={p-hid-1}-{p-hid}-{p-sid}-{p-sid+1}-{dir}-{dist}"));
+        templates.push_back(new Template("63={p-hid-1}-{p-hid}-{p-sid-1}-{p-sid}-{dir}-{dist}"));
+        templates.push_back(new Template("64={p-hid}-{p-hid+1}-{p-sid}-{p-sid+1}-{dir}-{dist}"));
+        templates.push_back(new Template("65={p-hid}-{p-hid+1}-{p-sid-1}-{p-sid}-{dir}-{dist}"));
+    }   //  end for use sibling linear
+}
+
+int SIBExtractor::num_templates() {
+    if (0 == instance_) {
+        instance_ = new SIBExtractor;
+    }
+
+    return templates.size();
+}
+
+int SIBExtractor::extract3o(Instance * inst, int hid, int cid, int sid, vector< StringVec > & cache) {
+    int len = inst->size();
     bool first_child = (hid == sid);
     bool last_child = (cid == sid);
 
     string dir, dist, feat;
 
     __GET_DIRECTION(hid, cid, dir);
+    __GET_DISTANCE_1_2_36_7(hid, cid, dist);
 
     if (first_child) dir = "#" + dir;
     else if (last_child) dir = dir + "#";
 
-    __GET_DISTANCE_1_2_36_7(hid, cid, dist);
+    Template::Data data;
 
-    const string & fh = inst->forms[hid];
-    const string & fs = ((first_child || last_child) ? NONE_FORM : inst->forms[sid]);
-    const string & fc = inst->forms[cid];
-    const string & lh = feat_opt.use_lemma ? inst->lemmas[hid] : NONE_LEMMA;
-    const string & lc = feat_opt.use_lemma ? inst->lemmas[cid] : NONE_LEMMA;
-    const string & ls = ((feat_opt.use_lemma && !first_child && !last_child) ? inst->lemmas[sid] : NONE_LEMMA);
+    bool is_root = (hid == 0);
 
-    const string & ph = inst->postags[hid];
-    const string & ps = ((first_child || last_child) ? NONE_POSTAG : inst->postags[sid]);
-    const string & pc = inst->postags[cid];
+    data.set( "f-hid",   inst->forms[hid] );
+    data.set( "f-sid",   ((first_child || last_child) ? NONE_FORM : inst->forms[sid]));
+    data.set( "f-cid",   inst->forms[cid] );
+    data.set( "p-hid",   inst->postags[hid] );
+    data.set( "p-sid",   ((first_child || last_child) ? NONE_POSTAG : inst->postags[sid]));
+    data.set( "p-cid",   inst->postags[cid] );
+    data.set( "p-hid-1", ((hid <= 1) ? NONE_POSTAG : inst->postags[hid - 1]) );
+    data.set( "p-hid+1", ((is_root || hid+1 >= len) ? NONE_POSTAG : inst->postags[hid + 1]) );
+    data.set( "p-cid-1", ((cid <= 1) ? NONE_POSTAG : inst->postags[cid - 1]) );
+    data.set( "p-cid+1", ((cid + 1 >= len) ? NONE_POSTAG : inst->postags[cid +1]) );
+    data.set( "p-sid-1", ((first_child || last_child || sid <= 1) ? NONE_POSTAG : inst->postags[sid-1]));
+    data.set( "p-sid+1", ((first_child || last_child || sid+1 >= len) ? NONE_POSTAG : inst->postags[sid+1]));
+    data.set( "dir",     dir );
+    data.set( "dist",    dist );
 
     feat.reserve(1024);
-    if (feat_opt.use_sibling_basic) {
-        paste(feat, "30=", ph, FSEP, ps, FSEP, pc, FSEP, dir);  PUSH(feat); PUSH_DIST(feat);
-        paste(feat,"31?=", fh, FSEP, ps, FSEP, pc, FSEP, dir);  PUSH(feat); PUSH_DIST(feat);
-        paste(feat,"32?=", ph, FSEP, fs, FSEP, pc, FSEP, dir);  PUSH(feat); PUSH_DIST(feat);
-        paste(feat,"33?=", ph, FSEP, ps, FSEP, fc, FSEP, dir);  PUSH(feat); PUSH_DIST(feat);
 
-        if (model_opt.labeled) {
-            paste(feat, "31=", ph, FSEP, ps, FSEP, dir);        PUSH(feat); PUSH_DIST(feat);
-            paste(feat, "33=", fh, FSEP, fs, FSEP, dir);        PUSH(feat); PUSH_DIST(feat);
-            paste(feat, "34=", ph, FSEP, fs, FSEP, dir);        PUSH(feat); PUSH_DIST(feat);
-            paste(feat, "35=", fh, FSEP, ps, FSEP, dir);        PUSH(feat); PUSH_DIST(feat);
-        }
-
-        paste(feat, "32=", pc, FSEP, ps, FSEP, dir);            PUSH(feat); PUSH_DIST(feat);
-        paste(feat, "36=", fc, FSEP, fs, FSEP, dir);            PUSH(feat); PUSH_DIST(feat);
-        paste(feat, "37=", fc, FSEP, ps, FSEP, dir);            PUSH(feat); PUSH_DIST(feat);
-        paste(feat, "38=", pc, FSEP, fs, FSEP, dir);            PUSH(feat); PUSH_DIST(feat);
-    }   //  end for if feat_opt.use_sibling_basic_features
-
-    if (feat_opt.use_sibling_linear) {
-        int len = inst->size();
-        const string & phL1 = ((hid <= 1) ? NONE_POSTAG : inst->postags[hid-1]);
-        const string & phR1 = ((hid == 0 || hid+1 >= len) ? NONE_POSTAG : inst->postags[hid+1]);
-        const string & psL1 = ((first_child || last_child || sid <= 1) ? NONE_POSTAG : inst->postags[sid-1]);
-        const string & psR1 = ((first_child || last_child || sid+1 >= len) ? NONE_POSTAG : inst->postags[sid+1]);
-        const string & pcL1 = ((cid <= 1) ? NONE_POSTAG : inst->postags[cid-1]);
-        const string & pcR1 = ((cid+1 >= len) ? NONE_POSTAG : inst->postags[cid+1]);
-
-        if (model_opt.labeled) {
-            paste(feat, "58=", ph, FSEP, ps, FSEP, psR1, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-            paste(feat, "59=", ph, FSEP, psL1, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-            paste(feat, "60=", ph, FSEP, phR1, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-            paste(feat, "61=", phL1, FSEP, ph, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-
-            paste(feat, "62=", phL1, FSEP, ph, FSEP, ps, FSEP, psR1, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-            paste(feat, "63=", phL1, FSEP, ph, FSEP, psL1, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-            paste(feat, "64=", ph, FSEP, phR1, FSEP, ps, FSEP, psR1, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-            paste(feat, "65=", ph, FSEP, phR1, FSEP, psL1, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-        }   //  end for if (model_opt.labeled)
-
-        paste(feat, "66=", pc, FSEP, ps, FSEP, psR1, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-        paste(feat, "67=", pc, FSEP, psL1, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-        paste(feat, "68=", pc, FSEP, pcR1, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-        paste(feat, "69=", pcL1, FSEP, pc, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-
-        paste(feat, "70=", pcL1, FSEP, pc, FSEP, ps, FSEP, psR1, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-        paste(feat, "71=", pcL1, FSEP, pc, FSEP, psL1, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-        paste(feat, "72=", pc, FSEP, pcR1, FSEP, ps, FSEP, psR1, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-        paste(feat, "73=", pc, FSEP, pcR1, FSEP, psL1, FSEP, ps, FSEP, dir);    PUSH(feat); PUSH_DIST(feat);
-    }   //  end for if feat_opt.use_sibling_linear_features
+    for (int i = 0; i < templates.size(); ++ i) {
+        templates[i]->render(data, feat);
+        cache[i].push_back(feat);
+    }
 }
 
 }       //  end for namespace parser

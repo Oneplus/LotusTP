@@ -5,6 +5,8 @@
 #include "settings.h"
 #include <list>
 
+#include <stdlib.h>
+
 namespace ltp {
 namespace parser {
 

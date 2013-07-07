@@ -162,9 +162,17 @@ private:
  */
 class SIBExtractor : public Extractor {
 public:
+    static SIBExtractor * extractor();
+    static int num_templates();
     static int extract1o(Instance * inst, int hid, vector<string> & cache);
     static int extract2o(Instance * inst, int hid, int cid, vector<string> & cache);
-    static int extract3o(Instance * inst, int hid, int cid, int gid, vector<string> & cache);
+    static int extract3o(Instance * inst, int hid, int cid, int sid, vector< StringVec > & cache);
+protected:
+    SIBExtractor();
+    ~SIBExtractor() {}
+private:
+    static SIBExtractor * instance_;
+    static vector<Template *> templates;
 };  //  end for SiblingExtractor
 
 }   //  end for namespace parser

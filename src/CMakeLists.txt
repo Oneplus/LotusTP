@@ -9,6 +9,7 @@ set (lgdpj_SRC collections.cpp
     extractor.cpp
     options.cpp
     decoder1o.cpp
+    decoder2o.cpp
     parser.cpp
     lgdpj.cpp)
 

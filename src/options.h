@@ -40,10 +40,14 @@ struct FeatureOptions {
     bool use_sibling_basic;
     bool use_sibling_linear;
 
+    // sth weired
+    bool use_last_sibling;
     // automaticall calculate
-    bool use_distance_in_dependency_features;
+    bool use_distance_in_features;
     bool use_unlabeled_dependency;
     bool use_labeled_dependency;
+    bool use_unlabeled_sibling;
+    bool use_labeled_sibling;
 
     bool use_lemma;
     bool use_coarse_postag;

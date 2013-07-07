@@ -33,6 +33,7 @@ const double EPS            =   1e-10;
 
 const size_t CMP            =   0;
 const size_t INCMP          =   1;
+const size_t SIBSP          =   2;
 
 enum {
     DEPU,       //  Unlabeled Standard Features

@@ -19,7 +19,7 @@ set (THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty)
 # config data directories
 set (DATA_DIR ${PROJECT_SOURCE_DIR}/data)
 
-#set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g")
+set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g")
 
 # compile shipped libraries
 # add_subdirectory (thirdparty)

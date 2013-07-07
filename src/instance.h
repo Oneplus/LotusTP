@@ -37,6 +37,28 @@ public:
                 }
             }
         }
+
+        if (labeled_sibling_features.total_size() > 0) {
+            for (int i = 0; i < labeled_sibling_features.dim1(); ++ i) {
+                for (int j = 0; j < labeled_sibling_features.dim2(); ++ j) {
+                    for (int k = 0; k < labeled_sibling_features.dim3(); ++ k) {
+                        for (int m = 0; m < labeled_sibling_features.dim4(); ++ m) {
+                            delete labeled_sibling_features[i][j][k][m];
+                        }
+                    }
+                }
+            }
+        }
+
+        if (sibling_features.total_size() > 0) {
+            for (int i = 0; i < sibling_features.dim1(); ++ i) {
+                for (int j = 0; j < sibling_features.dim2(); ++ j) {
+                    for (int k = 0; k < sibling_features.dim3(); ++ k) {
+                        delete sibling_features[i][j][k];
+                    }
+                }
+            }
+        }
     }
 
     size_t size() const {
