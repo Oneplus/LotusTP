@@ -112,6 +112,12 @@ bool Parser::parse_cfg(utility::ConfigParser & cfg) {
     feat_opt.use_dependency_bigram      =   false;
     feat_opt.use_dependency_surrounding =   false;
     feat_opt.use_dependency_between     =   false;
+
+    feat_opt.use_sibling                =   false;
+    feat_opt.use_sibling_basic          =   false;
+    feat_opt.use_sibling_linear         =   false;
+
+    feat_opt.use_last_sibling           =   true;
     feat_opt.use_distance_in_features   =   true;
     // feat_opt.use_distance_in_features = false;
 
@@ -220,7 +226,7 @@ void Parser::collect_unlabeled_features_of_one_instance(Instance * inst,
     }
 
     if (feat_opt.use_sibling) {
-        for (treeutils::SIBIterator itx(heads); !itx.end(); ++ itx) {
+        for (treeutils::SIBIterator itx(heads, feat_opt.use_last_sibling); !itx.end(); ++ itx) {
             int hid = itx.hid();
             int cid = itx.cid();
             int sid = itx.sid();
@@ -247,7 +253,7 @@ void Parser::collect_labeled_features_of_one_instance(Instance * inst,
     }
 
     if (feat_opt.use_sibling) {
-        for (treeutils::SIBIterator itx(heads); !itx.end(); ++ itx) {
+        for (treeutils::SIBIterator itx(heads, feat_opt.use_last_sibling); !itx.end(); ++ itx) {
             int hid = itx.hid();
             int cid = itx.cid();
             int sid = itx.sid();
@@ -415,7 +421,7 @@ void Parser::extract_features(Instance * inst) {
 
         cache.resize(N);
 
-        for (treeutils::SIBTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
+        for (treeutils::SIBTreeSpaceIterator itx(len, feat_opt.use_last_sibling); !itx.end(); ++ itx) {
             int hid = itx.hid();
             int cid = itx.cid();
             int sid = itx.sid();
@@ -790,7 +796,7 @@ void Parser::calculate_score(Instance * inst, const Parameters& param, bool use_
     }   //  end if feat_opt.use_labeled_dependency
 
     if (feat_opt.use_unlabeled_sibling) {
-        for (treeutils::SIBTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
+        for (treeutils::SIBTreeSpaceIterator itx(len, feat_opt.use_last_sibling); !itx.end(); ++ itx) {
             int hid = itx.hid();
             int cid = itx.cid();
             int sid = itx.sid();
@@ -807,7 +813,7 @@ void Parser::calculate_score(Instance * inst, const Parameters& param, bool use_
     }   //  end for if feat_opt.use_unlabeled_sibling
 
     if (feat_opt.use_labeled_sibling) {
-        for (treeutils::SIBTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
+        for (treeutils::SIBTreeSpaceIterator itx(len, feat_opt.use_last_sibling); !itx.end(); ++ itx) {
             int hid = itx.hid();
             int cid = itx.cid();
             int sid = itx.sid();

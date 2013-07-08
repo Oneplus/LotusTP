@@ -105,18 +105,14 @@ void Decoder2O::decode_projective(const Instance * inst) {
                     double shared_score = 0.;
  
                     if (feat_opt.use_unlabeled_dependency) {
-                        shared_score += inst->dependency_scores[s][t];
+                        shared_score += inst->dependency_scores[t][s];
                     }
 
                     if (feat_opt.use_labeled_dependency) {
-                        shared_score += inst->labeled_dependency_scores[s][t][l];
+                        shared_score += inst->labeled_dependency_scores[t][s][l];
                     }
 
                     {   //  I(t,s) = C(s,t-1) + C(t,t)
-                        if (t - 1 == s) {
-                            continue;
-                        }
-
                         const LatticeItem * const left = _lattice_cmp[s][t-1];
                         const LatticeItem * const right = _lattice_cmp[t][t];
 
@@ -179,7 +175,7 @@ void Decoder2O::decode_projective(const Instance * inst) {
                 }
             }   //  end for if (s != 0)
  
-            {   // S(s,t) = C(s,t) + C(t,r+1)
+            {   // S(s,t) = C(s,r) + C(t,r+1)
                 for (int r = s; r < t; ++ r) {
                     const LatticeItem * const left = _lattice_cmp[s][r];
                     const LatticeItem * const right = _lattice_cmp[t][r+1];
