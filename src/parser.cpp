@@ -323,9 +323,15 @@ void Parser::extract_features(Instance * inst) {
         if (!model_opt.labeled) {
             inst->dependency_features.resize(len, len);
             inst->dependency_scores.resize(len, len);
+
+            inst->dependency_features = 0;
+            inst->dependency_scores = 0.;
         } else {
             inst->labeled_dependency_features.resize(len, len, L);
             inst->labeled_dependency_scores.resize(len, len, L);
+
+            inst->labeled_dependency_features = 0;
+            inst->labeled_dependency_scores = 0.;
         }
 
         vector< StringVec >  cache;
@@ -338,20 +344,6 @@ void Parser::extract_features(Instance * inst) {
         for (treeutils::DEPTreeSpaceIterator itx(len); !itx.end(); ++ itx) {
             int hid = itx.hid();
             int cid = itx.cid();
-
-            if (!model_opt.labeled) {
-                inst->dependency_features[hid][cid] = NULL;
-                inst->dependency_scores[hid][cid] = 0.;
-            } else {
-                for (int l = 0; l < model->num_deprels(); ++ l) {
-                    inst->labeled_dependency_features[hid][cid][l] = NULL;
-                    inst->labeled_dependency_scores[hid][cid][l] = 0.;
-                }
-            }
-
-            if (hid == cid) {
-                continue;
-            }
 
             // here the self-implementated String Vector is little
             // fasteer than the list<string>
@@ -409,9 +401,15 @@ void Parser::extract_features(Instance * inst) {
         if (!model_opt.labeled) {
             inst->sibling_features.resize(len, len, len);
             inst->sibling_scores.resize(len, len, len);
+
+            inst->sibling_features = 0;
+            inst->sibling_scores = 0.;
         } else {
             inst->labeled_sibling_features.resize(len, len, len, L);
             inst->labeled_sibling_scores.resize(len, len, len, L);
+
+            inst->labeled_sibling_features = 0;
+            inst->labeled_sibling_scores = 0.;
         }
 
         int N = SIBExtractor::num_templates();
@@ -425,16 +423,6 @@ void Parser::extract_features(Instance * inst) {
             int hid = itx.hid();
             int cid = itx.cid();
             int sid = itx.sid();
-
-            if (!model_opt.labeled) {
-                inst->sibling_features[hid][cid][sid] = 0;
-                inst->sibling_scores[hid][cid][sid] = 0;
-            } else {
-                for (int l = 0; l < L; ++ l) {
-                    inst->labeled_sibling_features[hid][cid][sid][l] = 0;
-                    inst->labeled_sibling_features[hid][cid][sid][l] = 0;
-                }
-            }
 
             for (int i = 0; i < N; ++ i) {
                 cache[i].clear();
@@ -484,6 +472,31 @@ void Parser::extract_features(Instance * inst) {
             }
         }   //  end for SIBTreeSpaceIterator itx
     }   //  end for feat_opt.use_sibling
+}
+
+void Parser::extract_features(vector<Instance *>& dat) {
+    ofstream fout("lgdpj.fv.tmp", std::ofstream::binary);
+    // DependencyExtractor
+    for (int i = 0; i < dat.size(); ++ i) {
+        extract_features(dat[i]);
+
+        dat[i]->dump_all_featurevec(fout);
+        if ((i + 1) % model_opt.display_interval == 0) {
+            TRACE_LOG("[%d] instance is extracted.", i + 1);
+        }
+    }   // end for i = 0; i < dat.size(); ++ i
+
+    fout.close();
+}
+
+void Parser::build_gold_features() {
+    ifstream fin("lgdpj.fv.tmp", std::ifstream::binary);
+    for (int i = 0; i < train_dat.size(); ++ i) {
+        train_dat[i]->load_all_featurevec(fin);
+        collect_features_of_one_instance(train_dat[i], true);
+        train_dat[i]->nice_all_featurevec();
+    }
+    fin.close();
 }
 
 void Parser::train(void) {
@@ -537,15 +550,18 @@ void Parser::train(void) {
         }
     }
 
+    ifstream fin("lgdpj.fv.tmp", std::ifstream::binary);
     for (int iter = 0; iter < train_opt.max_iter; ++ iter) {
         TRACE_LOG("Start training epoch #%d.", (iter + 1));
+        fin.seekg(0, fin.beg);
 
         // random_shuffle(train_dat.begin(), train_dat.end());
         for (int i = 0; i < train_dat.size(); ++ i) {
+            train_dat[i]->load_all_featurevec(fin);
             calculate_score(train_dat[i], model->param);
             decoder->decode(train_dat[i]);
-
             collect_features_of_one_instance(train_dat[i], false);
+            train_dat[i]->nice_all_featurevec();
 
             // instance_verify(train_dat[i], cout, true);
 
@@ -606,44 +622,31 @@ void Parser::evaluate(void) {
     int label_correct = 0;
     int total_rels = 0;
 
-    if (!read_instances(holdout_file, holdout_dat)) {
-        ERROR_LOG("Failed to read holdout data from [%s].", holdout_file);
-        return;
-    } else {
-        TRACE_LOG("Read in [%d] holdout instances.", holdout_dat.size());
-    }
+    ifstream f(holdout_file);
+    CoNLLReader reader(f);
 
-    for (int i = 0; i < holdout_dat.size(); ++ i) {
-        // build up labeled identification
-        int len = holdout_dat[i]->size();
+    Instance * inst = NULL;
+
+    double before = get_time();
+    while ((inst = reader.next())) {
 
         if (model_opt.labeled) {
-            holdout_dat[i]->deprelsidx.resize(len, -1);
-            holdout_dat[i]->predicted_deprelsidx.resize(len, -1);
-
-            for (int j = 0; j < len; ++ j) {
-
-                int idx = -1;
-                idx = model->deprels.index(holdout_dat[i]->deprels[j].c_str());
-                holdout_dat[i]->deprelsidx[j] = idx;
+            inst->deprelsidx.resize(inst->size());
+            for (int i = 1; i < inst->size(); ++ i) {
+                inst->deprelsidx[i] = model->deprels.index(inst->deprels[i].c_str());
             }
         }
 
-        extract_features(holdout_dat[i]);
-        calculate_score(holdout_dat[i], model->param, true);
-        decoder->decode(holdout_dat[i]);
+        extract_features(inst);
+        calculate_score(inst, model->param, true);
 
-        // instance_verify(holdout_dat[i], cout, true);
-#if DEBUG
-        collect_features_of_one_instance(holdout_dat[i], false);
-        instance_verify(holdout_dat[i], cout, true);
-#endif //   end for DEBUG
+        decoder->decode(inst);
 
-        total_rels += holdout_dat[i]->num_rels();
-        head_correct += holdout_dat[i]->num_correct_heads();
-        label_correct += holdout_dat[i]->num_correct_heads_and_labels();
+        total_rels += inst->num_rels();
+        head_correct += inst->num_correct_heads();
+        label_correct += inst->num_correct_heads_and_labels();
 
-        holdout_dat[i];
+        delete inst;
     }
 
     TRACE_LOG("UAS: %.4lf ( %d / %d )", 
@@ -658,7 +661,10 @@ void Parser::evaluate(void) {
                 total_rels);
     }
 
-    holdout_dat.clear();
+    double after = get_time();
+    TRACE_LOG("consuming time: %.2lf", after - before);
+
+    // holdout_dat.clear();
 }
 
 void Parser::test() {

@@ -86,22 +86,9 @@ private:
 
     void extract_features(Instance * inst);
 
-    void extract_features(vector<Instance *>& dat) {
-        // ofstream out("cdt.retrieve.dat", std::ostream::out);
-        // DependencyExtractor extractor;
-        for (int i = 0; i < dat.size(); ++ i) {
-            extract_features(dat[i]);
-            if ((i + 1) % model_opt.display_interval == 0) {
-                TRACE_LOG("[%d] instance is extracted.", i + 1);
-            }
-        }   // end for i = 0; i < dat.size(); ++ i
-    }
+    void extract_features(vector<Instance *>& dat);
 
-    void build_gold_features() {
-        for (int i = 0; i < train_dat.size(); ++ i) {
-            collect_features_of_one_instance(train_dat[i], true);
-        }
-    }
+    void build_gold_features(void);
 
     void train(void);
 

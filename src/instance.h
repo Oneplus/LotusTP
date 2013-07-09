@@ -164,6 +164,132 @@ public:
         }
         return -1;
     }
+
+    int dump_all_featurevec(std::ostream & ofs) {
+        int len;
+        FeatureVector ** fvs = 0;
+        if ((len = dependency_features.total_size()) > 0 && 
+                (fvs = dependency_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->write(ofs);
+                    fvs[i]->nice();
+                }
+            }
+        }
+
+        if ((len = labeled_dependency_features.total_size()) > 0 && 
+                (fvs = labeled_dependency_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->write(ofs);
+                    fvs[i]->nice(); 
+                }
+            }
+        }
+
+        if ((len = sibling_features.total_size()) > 0 &&
+                (fvs = sibling_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->write(ofs);
+                    fvs[i]->nice();
+                }
+            }
+        }
+
+        if ((len = labeled_sibling_features.total_size()) > 0 &&
+                (fvs = labeled_sibling_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->write(ofs);
+                    fvs[i]->nice();
+                }
+            }
+        }
+    }
+
+    int load_all_featurevec(std::istream & ifs) {
+        int len;
+        FeatureVector ** fvs = 0;
+        if ((len = dependency_features.total_size()) > 0 && 
+                (fvs = dependency_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->read(ifs);
+                }
+            }
+        }
+
+        if ((len = labeled_dependency_features.total_size()) > 0 && 
+                (fvs = labeled_dependency_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->read(ifs);
+                }
+            }
+        }
+
+        if ((len = sibling_features.total_size()) > 0 &&
+                (fvs = sibling_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->read(ifs);
+                }
+            }
+        }
+
+        if ((len = labeled_sibling_features.total_size()) > 0 &&
+                (fvs = labeled_sibling_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->read(ifs);
+                }
+            }
+        }
+    }
+
+    int nice_all_featurevec() {
+        int len;
+        FeatureVector ** fvs;
+        if ((len = dependency_features.total_size()) > 0 && 
+                (fvs = dependency_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->nice();
+                }
+            }
+        }
+
+        if ((len = labeled_dependency_features.total_size()) > 0 && 
+                (fvs = labeled_dependency_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->nice();
+                }
+            }
+        }
+
+        if ((len = sibling_features.total_size()) > 0 &&
+                (fvs = sibling_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->nice();
+                }
+            }
+        }
+
+        if ((len = labeled_sibling_features.total_size()) > 0 &&
+                (fvs = labeled_sibling_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->nice();
+                }
+            }
+        }
+    }
+
+
 public:
 
     vector<string>  forms;      /* */
