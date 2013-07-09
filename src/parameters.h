@@ -22,6 +22,10 @@ public:
         _W_sum(0),
         _W_time(0) {}
 
+    ~Parameters() {
+        dealloc();
+    }
+
     void realloc(int dim) {
         dealloc();
         _dim = dim;

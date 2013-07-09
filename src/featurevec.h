@@ -25,10 +25,12 @@ struct FeatureVector {
     long long offset;
 
     /*
-     * write the feature vector to file,
-     * return offset of the featurevec
+     * Write the feature vector to file, return offset of the featurevec
+     * This method is discarded because of the low performance of file
+     * operation.
      *
-     *  @param[in]  fv      the feature vector
+     *  @param[in]  ofs     the output filestream
+     *  @return     int     offset of the feature.
      */
     int write(std::ostream & ofs) {
         // 
@@ -51,7 +53,8 @@ struct FeatureVector {
     }
 
     /*
-     * read the feature vector from file,
+     * Read the feature vector from filestream, This method is discarded
+     * because of the low performance of file operation.
      *
      *  @param[in]  ifs     the input filestream
      */

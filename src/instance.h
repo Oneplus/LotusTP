@@ -289,7 +289,59 @@ public:
         }
     }
 
+    int cleanup() {
+        int len;
+        FeatureVector ** fvs;
+        if ((len = dependency_features.total_size()) > 0 && 
+                (fvs = dependency_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->nice();
+                    delete fvs[i];
+                }
+            }
+        }
 
+        if ((len = labeled_dependency_features.total_size()) > 0 && 
+                (fvs = labeled_dependency_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->nice();
+                    delete fvs[i];
+                }
+            }
+        }
+
+        if ((len = sibling_features.total_size()) > 0 &&
+                (fvs = sibling_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->nice();
+                    delete fvs[i];
+                }
+            }
+        }
+
+        if ((len = labeled_sibling_features.total_size()) > 0 &&
+                (fvs = labeled_sibling_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->nice();
+                    delete fvs[i];
+                }
+            }
+        }
+        features.zero();
+        predicted_features.zero();
+        dependency_features.dealloc();
+        dependency_scores.dealloc();
+        labeled_dependency_features.dealloc();
+        labeled_dependency_scores.dealloc();
+        sibling_features.dealloc();
+        sibling_scores.dealloc();
+        labeled_sibling_features.dealloc();
+        labeled_sibling_scores.dealloc();
+    }
 public:
 
     vector<string>  forms;      /* */

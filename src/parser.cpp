@@ -366,26 +366,24 @@ void Parser::extract_features(Instance * inst) {
 
             int num_feat = cache_again.size();
 
-            if (!model_opt.labeled) {
-                inst->dependency_features[hid][cid] = new FeatureVector;
-                inst->dependency_features[hid][cid]->n = num_feat;
-                inst->dependency_features[hid][cid]->idx = 0;
-                inst->dependency_features[hid][cid]->val = 0;
+            if (num_feat > 0) {
+                if (!model_opt.labeled) {
+                    inst->dependency_features[hid][cid] = new FeatureVector;
+                    inst->dependency_features[hid][cid]->n = num_feat;
+                    inst->dependency_features[hid][cid]->idx = 0;
+                    inst->dependency_features[hid][cid]->val = 0;
 
-                if (num_feat > 0) {
                     inst->dependency_features[hid][cid]->idx = new int[num_feat];
                     for (int j = 0; j < num_feat; ++ j) {
                         inst->dependency_features[hid][cid]->idx[j] = cache_again[j];
                     }
-                }
-            } else {
-                for (int l = 0; l < model->num_deprels(); ++ l) {
-                    inst->labeled_dependency_features[hid][cid][l] = new FeatureVector;
-                    inst->labeled_dependency_features[hid][cid][l]->n = num_feat;
-                    inst->labeled_dependency_features[hid][cid][l]->idx = 0;
-                    inst->labeled_dependency_features[hid][cid][l]->val = 0;
+                } else {
+                    for (int l = 0; l < model->num_deprels(); ++ l) {
+                        inst->labeled_dependency_features[hid][cid][l] = new FeatureVector;
+                        inst->labeled_dependency_features[hid][cid][l]->n = num_feat;
+                        inst->labeled_dependency_features[hid][cid][l]->idx = 0;
+                        inst->labeled_dependency_features[hid][cid][l]->val = 0;
 
-                    if (num_feat > 0) {
                         inst->labeled_dependency_features[hid][cid][l]->idx = new int[num_feat];
                         for (int j = 0; j < num_feat; ++ j) {
                             inst->labeled_dependency_features[hid][cid][l]->idx[j] = (
@@ -443,32 +441,31 @@ void Parser::extract_features(Instance * inst) {
 
             int num_feat = cache_again.size();
 
-            if (!model_opt.labeled) {
-                inst->sibling_features[hid][cid][sid] = new FeatureVector;
-                inst->sibling_features[hid][cid][sid]->n = num_feat;
-                inst->sibling_features[hid][cid][sid]->idx = 0;
-                inst->sibling_features[hid][cid][sid]->val = 0;
+            if (num_feat > 0) {
+                if (!model_opt.labeled) {
+                    inst->sibling_features[hid][cid][sid] = new FeatureVector;
+                    inst->sibling_features[hid][cid][sid]->n = num_feat;
+                    inst->sibling_features[hid][cid][sid]->idx = 0;
+                    inst->sibling_features[hid][cid][sid]->val = 0;
 
-                if (num_feat > 0) {
                     inst->sibling_features[hid][cid][sid]->idx = new int[num_feat];
                     for (int j = 0; j < num_feat; ++ j) {
                         inst->sibling_features[hid][cid][sid]->idx[j] = cache_again[j];
                     }
-                }
-            } else {
-                for (int l = 0; l < model->num_deprels(); ++ l) {
-                    inst->labeled_sibling_features[hid][cid][sid][l] = new FeatureVector;
-                    inst->labeled_sibling_features[hid][cid][sid][l]->n = num_feat;
-                    inst->labeled_sibling_features[hid][cid][sid][l]->idx = 0;
-                    inst->labeled_sibling_features[hid][cid][sid][l]->val = 0;
-                    if (num_feat > 0) {
+                } else {
+                    for (int l = 0; l < model->num_deprels(); ++ l) {
+                        inst->labeled_sibling_features[hid][cid][sid][l] = new FeatureVector;
+                        inst->labeled_sibling_features[hid][cid][sid][l]->n = num_feat;
+                        inst->labeled_sibling_features[hid][cid][sid][l]->idx = 0;
+                        inst->labeled_sibling_features[hid][cid][sid][l]->val = 0;
+
                         inst->labeled_sibling_features[hid][cid][sid][l]->idx = new int[num_feat];
                         for (int j = 0; j < num_feat; ++ j) {
                             inst->labeled_sibling_features[hid][cid][sid][l]->idx[j] = (
                                     cache_again[j] + l);
                         }
-                    }
-                }   //  end for if model_opt.labeled
+                    }   //  end for if model_opt.labeled
+                }
             }
         }   //  end for SIBTreeSpaceIterator itx
     }   //  end for feat_opt.use_sibling
@@ -523,11 +520,11 @@ void Parser::train(void) {
     TRACE_LOG("Building feature space is done.");
     TRACE_LOG("Number of features: [%d]", model->space.num_features());
 
-    TRACE_LOG("Start extracting features.");
-    extract_features(train_dat);
-    TRACE_LOG("Extracting feature is done.");
+    //TRACE_LOG("Start extracting features.");
+    // extract_features(train_dat);
+    //TRACE_LOG("Extracting feature is done.");
 
-    build_gold_features();
+    // build_gold_features();
 
     model->param.realloc(model->dim());
     TRACE_LOG("Allocate a parameter vector of [%d] dimension.", model->dim());
@@ -557,11 +554,14 @@ void Parser::train(void) {
 
         // random_shuffle(train_dat.begin(), train_dat.end());
         for (int i = 0; i < train_dat.size(); ++ i) {
-            train_dat[i]->load_all_featurevec(fin);
+            // train_dat[i]->load_all_featurevec(fin);
+
+            extract_features(train_dat[i]);
             calculate_score(train_dat[i], model->param);
             decoder->decode(train_dat[i]);
+            collect_features_of_one_instance(train_dat[i], true);
             collect_features_of_one_instance(train_dat[i], false);
-            train_dat[i]->nice_all_featurevec();
+            // train_dat[i]->nice_all_featurevec();
 
             // instance_verify(train_dat[i], cout, true);
 
@@ -582,10 +582,6 @@ void Parser::train(void) {
                     step = (error - score) / norm;
                 }
 
-                // update_features.str(cout);
-                // cout << "parser::train - num error = " << error << endl;
-                // cout << "parser::train - norm = " << norm << endl;
-                // cout << "parser::train - step = " << step << endl;
                 model->param.add(update_features, 
                         iter * train_dat.size() + i + 1, 
                         step);
@@ -603,6 +599,8 @@ void Parser::train(void) {
             if ((i + 1) % model_opt.display_interval == 0) {
                 TRACE_LOG("[%d] instances is trained.", i + 1);
             }
+
+            train_dat[i]->cleanup();
         }
 
         model->param.flush( train_dat.size() * (iter + 1) );
@@ -613,6 +611,8 @@ void Parser::train(void) {
         model->save(fout);
 
     }
+
+    delete model;
 }
 
 void Parser::evaluate(void) {
@@ -774,7 +774,7 @@ void Parser::calculate_score(Instance * inst, const Parameters& param, bool use_
             int cid = itx.cid();
 
             FeatureVector * fv = inst->dependency_features[hid][cid];
-            inst->dependency_scores[hid][cid] = DOUBLE_NEG_INF;
+            inst->dependency_scores[hid][cid] = 0.;
 
             if (!fv) {
                 continue;
@@ -790,7 +790,7 @@ void Parser::calculate_score(Instance * inst, const Parameters& param, bool use_
              int cid = itx.cid();
              for (int l = 0; l < L; ++ l) {
                  FeatureVector * fv = inst->labeled_dependency_features[hid][cid][l];
-                 inst->labeled_dependency_scores[hid][cid][l] = DOUBLE_NEG_INF;
+                 inst->labeled_dependency_scores[hid][cid][l] = 0.;
 
                  if (!fv) {
                      continue;
@@ -808,7 +808,7 @@ void Parser::calculate_score(Instance * inst, const Parameters& param, bool use_
             int sid = itx.sid();
 
             FeatureVector * fv = inst->sibling_features[hid][cid][sid];
-            inst->sibling_scores[hid][cid][sid] = DOUBLE_NEG_INF;
+            inst->sibling_scores[hid][cid][sid] = 0.;
 
             if (!fv) {
                 continue;
@@ -826,7 +826,7 @@ void Parser::calculate_score(Instance * inst, const Parameters& param, bool use_
 
             for (int l = 0; l < L; ++ l) {
                 FeatureVector * fv = inst->labeled_sibling_features[hid][cid][sid][l];
-                inst->labeled_sibling_scores[hid][cid][sid][l] = DOUBLE_NEG_INF;
+                inst->labeled_sibling_scores[hid][cid][sid][l] = 0.;
 
                 if (!fv) {
                     continue;

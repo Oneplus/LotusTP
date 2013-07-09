@@ -118,7 +118,7 @@ public:
     static int extract3o(Instance * inst, int hid, int cid, int gid, vector<string> & cache);
 protected:
     DEPExtractor();
-    ~DEPExtractor() {}
+    ~DEPExtractor();
 private:
     static DEPExtractor * instance_;
     static vector<Template *>    templates;
@@ -169,7 +169,7 @@ public:
     static int extract3o(Instance * inst, int hid, int cid, int sid, vector< StringVec > & cache);
 protected:
     SIBExtractor();
-    ~SIBExtractor() {}
+    ~SIBExtractor();
 private:
     static SIBExtractor * instance_;
     static vector<Template *> templates;

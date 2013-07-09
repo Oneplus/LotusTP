@@ -309,6 +309,12 @@ DEPExtractor::DEPExtractor() {
     }
 }
 
+DEPExtractor::~DEPExtractor() {
+    for (int i = 0; i < templates.size(); ++ i) {
+        delete templates[i];
+    }
+}
+
 // accessment function, which return the singleton class
 DEPExtractor * DEPExtractor::extractor() {
     if (0 == instance_) {
@@ -511,6 +517,12 @@ SIBExtractor::SIBExtractor() {
         templates.push_back(new Template("64={p-hid}-{p-hid+1}-{p-sid}-{p-sid+1}-{dir}-{dist}"));
         templates.push_back(new Template("65={p-hid}-{p-hid+1}-{p-sid-1}-{p-sid}-{dir}-{dist}"));
     }   //  end for use sibling linear
+}
+
+SIBExtractor::~SIBExtractor() {
+    for (int i = 0; i < templates.size(); ++ i) {
+        delete templates[i];
+    }
 }
 
 int SIBExtractor::num_templates() {

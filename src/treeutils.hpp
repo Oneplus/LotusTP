@@ -239,12 +239,15 @@ public:
 
     ~SIBIterator() {
         for (int i = 0; i < _len; ++ i) {
-            delete _children[0][i];
-            delete _children[1][i];
+            delete [](_children[0][i]);
+            delete [](_children[1][i]);
         }
 
-        delete _children[0];
-        delete _children[1];
+        delete [](_children[0]);
+        delete [](_children[1]);
+
+        delete [](_num_children[0]);
+        delete [](_num_children[1]);
     }
 
     inline int hid(void) {
