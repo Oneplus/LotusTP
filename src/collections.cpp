@@ -47,15 +47,20 @@ bool DictionaryCollections::load(istream & in) {
 
     in.read(reinterpret_cast<char *>(&idx), sizeof(int));
     in.read(reinterpret_cast<char *>(&sz), sizeof(unsigned int));
-    for (unsigned i = 0; i < sz; ++ i) {
-        in.read(chunk, 32);
 
-        Dictionary * dict = new Dictionary(this);
-        if (!dict->database.load(in)) {
+    if (sz != dicts.size()) {
+        return false;
+    }
+
+    for (unsigned i = 0; i < sz; ++ i) {
+        // in.read(chunk, 32);
+
+        // Dictionary * dict = new Dictionary(this);
+        if (!dicts[i]->database.load(in)) {
             return false;
         }
 
-        dicts.push_back(dict);
+        // dicts[i].push_back(dict);
     }
 
     return true;

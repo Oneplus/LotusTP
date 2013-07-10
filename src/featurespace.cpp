@@ -18,6 +18,7 @@ int FeatureSpace::retrieve(int gid, int tid, const char * key, bool create) {
 
 int FeatureSpace::index(int gid, int tid, const char * key, int lid) {
     int bid = groups[gid]->retrieve(tid, key, false);
+    // std::cout << gid << " " << tid << " " << key << " " << lid << " " << bid <<  std::endl;
     if (bid < 0) return -1;
 
     return bid * _num_deprels + lid + offsets[gid];
@@ -174,23 +175,35 @@ void FeatureSpace::save(std::ostream & out) {
     }*/
 }
 
-int FeatureSpace::load(std::istream & in) {
-    int ret = 0;
+bool FeatureSpace::load(int num_deprels, std::istream & in) {
 
+    _num_deprels = num_deprels;
+    _offset = 0;
+    _num_features = 0;
+
+    offsets[DEP] = _offset;
     if (feat_opt.use_dependency) {
         groups[DEP] = new DictionaryCollections( DEPExtractor::num_templates() );
         if (!groups[DEP]->load(in)) {
-            return -1;
+            return false;
         }
-        ++ ret;
+
+        _num_features += groups[DEP]->dim();
+        _offset += groups[DEP]->dim() * _num_deprels;
     }
 
-    /*if (feat_opt.use_sibling) {
-        groups[SIB] = new DictionaryGroup( SIBExtractor::num_templates() );
-        ++ ret;
+    offsets[SIB] = _offset;
+    if (feat_opt.use_sibling) {
+        groups[SIB] = new DictionaryCollections( SIBExtractor::num_templates() );
+        if (!groups[SIB]->load(in)) {
+            return false;
+        }
+
+        _num_features += groups[SIB]->dim();
+        _offset += groups[SIB]->dim() * _num_deprels;
     }
 
-    if (feat_opt.use_grand) {
+    /*if (feat_opt.use_grand) {
         groups[GRD] = new DictionaryGroup( GRDExtractor::num_templates() );
         ++ ret;
     }
@@ -210,7 +223,7 @@ int FeatureSpace::load(std::istream & in) {
         ++ ret;
     }*/
 
-    return ret;
+    return true;
 
 }
 

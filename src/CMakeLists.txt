@@ -5,6 +5,7 @@ include_directories (./ ${SOURCE_DIR} ${SOURCE_DIR}/utils ${SOURCE_DIR}/math)
 message(STATUS ${SOURCE_DIR})
 
 set (lgdpj_SRC collections.cpp
+    model.cpp
     featurespace.cpp
     extractor.cpp
     options.cpp

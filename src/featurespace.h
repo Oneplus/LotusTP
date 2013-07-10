@@ -26,7 +26,7 @@ public:
      *
      *  @param[in]  _num_deprels    the number of dependency relations
      */
-    FeatureSpace() : _num_deprels(1) {
+    FeatureSpace() : _num_deprels(1), _offset(0) {
         // set all the group to be empty
         for (int i = 0; i < NUM_FEATURE_GROUPS; ++ i) {
             groups[i]  = 0;
@@ -93,9 +93,20 @@ public:
      */
     int num_features();
 
+    /*
+     * save the features space to the output stream
+     *
+     *  @param[out] out     the output stream
+     */
     void save(ostream & out);
 
-    int load(istream & in);
+    /*
+     * load feature space from input stream
+     *
+     *  @param[in]  num_deprels the number of dependency relation type
+     *  @param[in]  in          the input stream
+     */
+    bool load(int num_deprels, istream & in);
 private:
     const static int NUM_FEATURE_GROUPS = 6;
 

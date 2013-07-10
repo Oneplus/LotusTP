@@ -154,14 +154,22 @@ public:
     }
 
     bool load(istream & in) {
-        SmartMap<int>::load(in);
+        bool ret = SmartMap<int>::load(in);
+        if (!ret) {
+            return ret;
+        }
 
         if (entries) {
             delete [](entries);
         }
 
         entries = new int[SmartMap<int>::_num_entries];
+        if (!entries) {
+            return false;
+        }
+
         in.read(reinterpret_cast<char *>(entries), sizeof(int) * _num_entries);
+        return true;
     }
 };
 

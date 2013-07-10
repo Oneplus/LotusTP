@@ -170,7 +170,7 @@ bool Parser::parse_cfg(utility::ConfigParser & cfg) {
         }
 
         if (cfg.get_integer("feature", "use-sibling-linear", intbuf)) {
-            feat_opt.use_sibling_basic = (intbuf == 1);
+            feat_opt.use_sibling_linear = (intbuf == 1);
         }
 
         // detrieve sibling type from configuration
@@ -325,13 +325,13 @@ void Parser::extract_features(Instance * inst) {
             inst->dependency_scores.resize(len, len);
 
             inst->dependency_features = 0;
-            inst->dependency_scores = 0.;
+            inst->dependency_scores = DOUBLE_NEG_INF;
         } else {
             inst->labeled_dependency_features.resize(len, len, L);
             inst->labeled_dependency_scores.resize(len, len, L);
 
             inst->labeled_dependency_features = 0;
-            inst->labeled_dependency_scores = 0.;
+            inst->labeled_dependency_scores = DOUBLE_NEG_INF;
         }
 
         vector< StringVec >  cache;
@@ -401,13 +401,13 @@ void Parser::extract_features(Instance * inst) {
             inst->sibling_scores.resize(len, len, len);
 
             inst->sibling_features = 0;
-            inst->sibling_scores = 0.;
+            inst->sibling_scores = DOUBLE_NEG_INF;
         } else {
             inst->labeled_sibling_features.resize(len, len, len, L);
             inst->labeled_sibling_scores.resize(len, len, len, L);
 
             inst->labeled_sibling_features = 0;
-            inst->labeled_sibling_scores = 0.;
+            inst->labeled_sibling_scores = DOUBLE_NEG_INF;
         }
 
         int N = SIBExtractor::num_templates();
@@ -519,12 +519,6 @@ void Parser::train(void) {
     build_feature_space();
     TRACE_LOG("Building feature space is done.");
     TRACE_LOG("Number of features: [%d]", model->space.num_features());
-
-    //TRACE_LOG("Start extracting features.");
-    // extract_features(train_dat);
-    //TRACE_LOG("Extracting feature is done.");
-
-    // build_gold_features();
 
     model->param.realloc(model->dim());
     TRACE_LOG("Allocate a parameter vector of [%d] dimension.", model->dim());
@@ -673,19 +667,26 @@ void Parser::test() {
     ifstream mfs(model_file, std::ifstream::binary);
 
     if (!mfs) {
+        ERROR_LOG("Failed to open file [%s].", model_file);
         return;
     }
 
     model = new Model;
     if (!model->load(mfs)) {
+        ERROR_LOG("Failed to load model");
         return;
     }
 
+    TRACE_LOG("Number of postags [%d]", model->num_postags());
     TRACE_LOG("Number of deprels [%d]", model->num_deprels());
-    TRACE_LOG("Number of dimension [%d]", model->dim());
     TRACE_LOG("Number of features [%d]", model->num_features());
-    TRACE_LOG("Labeled: %s", (model_opt.labeled ? "true" : "fales"));
-    TRACE_LOG("Decoder: %s", model_opt.decoder_name.c_str());
+    TRACE_LOG("Number of dimension [%d]", model->dim());
+    TRACE_LOG("Labeled:                         %s", 
+            (model_opt.labeled ? "true" : "fales"));
+    TRACE_LOG("Decoder:                         %s", 
+            model_opt.decoder_name.c_str());
+    TRACE_LOG("Dependency features:             %s",
+            (feat_opt.use_dependency ? "true" : "false"));
     TRACE_LOG("Dependency features unigram:     %s", 
             (feat_opt.use_dependency_unigram ? "true" : "false"));
     TRACE_LOG("Dependency features bigram:      %s", 
@@ -694,6 +695,12 @@ void Parser::test() {
             (feat_opt.use_dependency_surrounding ? "true" : "false"));
     TRACE_LOG("Dependency features between:     %s", 
             (feat_opt.use_dependency_between ? "true" : "false"));
+    TRACE_LOG("Sibling features:                %s",
+            (feat_opt.use_sibling ? "true" : "false"));
+    TRACE_LOG("Sibling basic features:          %s", 
+            (feat_opt.use_sibling_basic ? "true" : "false"));
+    TRACE_LOG("Sibling linear features:         %s", 
+            (feat_opt.use_sibling_linear ? "true" : "false"));
 
     const char * test_file = test_opt.test_file.c_str();
 
@@ -706,50 +713,36 @@ void Parser::test() {
 
     Instance * inst = NULL;
 
-    if (!model_opt.labeled) {
-        decoder = new Decoder1O();
-    } else {
-        decoder = new Decoder1O(model->num_deprels());
+    if (model_opt.decoder_name == "1o") {
+        if (!model_opt.labeled) {
+            decoder = new Decoder1O();
+        } else {
+            decoder = new Decoder1O(model->num_deprels());
+        }
+    } else if (model_opt.decoder_name == "2o-sib") {
+        if (!model_opt.labeled) {
+            decoder = new Decoder2O();
+        } else {
+            decoder = new Decoder2O(model->num_deprels());
+        }
     }
-
-    int head_correct = 0;
-    int label_correct = 0;
-    int total_rels = 0;
 
     cerr << get_time() - before << endl;
     before = get_time();
     while ((inst = reader.next())) {
-
-        if (model_opt.labeled) {
-            inst->deprelsidx.resize(inst->size());
-            for (int i = 1; i < inst->size(); ++ i) {
-                inst->deprelsidx[i] = model->deprels.index(inst->deprels[i].c_str());
-            }
-        }
-
         extract_features(inst);
+        /*int len = inst->labeled_dependency_features.total_size();
+        for (int i = 0; i < len; ++ i) {
+            cout << inst->labeled_dependency_features.c_buf()[i] << endl;
+        }*/
         calculate_score(inst, model->param);
 
         decoder->decode(inst);
 
         instance_verify(inst, cout, true);
 
-        total_rels += inst->num_rels();
-        head_correct += inst->num_correct_heads();
-        label_correct += inst->num_correct_heads_and_labels();
-
         delete inst;
     }
-
-    TRACE_LOG("UAS: %.4lf ( %d / %d )", (double)head_correct / total_rels, head_correct, total_rels);
-
-    if (model_opt.labeled) {
-        TRACE_LOG("LAS: %.4lf ( %d / %d )", 
-                (double)label_correct / total_rels, 
-                label_correct, 
-                total_rels);
-    }
-
     double after = get_time();
     cerr << after - before << endl;
     sleep(1000000);
