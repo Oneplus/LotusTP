@@ -3,6 +3,7 @@
 
 #include "instance.h"
 #include "settings.h"
+#include <iostream>
 #include <list>
 
 #include <stdlib.h>
@@ -10,8 +11,8 @@
 namespace ltp {
 namespace parser {
 
-using namespace std;
-
+// data struct for decode chart item. Provide several construction 
+// methods and bind certain type.
 class LatticeItem {
 public:
     const int _g;           /* grand */
@@ -93,12 +94,12 @@ private:
         _right(0),
         _label_s_t(-1),
         _g(-1) {
-        cerr << "LatticeItem::LatticeItem(const LatticeItem & rhs) is not allowed" << endl;
+        std::cerr << "LatticeItem::LatticeItem(const LatticeItem & rhs) is not allowed" << std::endl;
         exit(-1);
     }
 
     LatticeItem & operator = (const LatticeItem & rhs) {
-        cerr << "LatticeItem::operator= (const LatticeItem & rhs) is not allowed" << endl;
+        std::cerr << "LatticeItem::operator= (const LatticeItem & rhs) is not allowed" << std::endl;
         exit(-1);
     }
 
@@ -108,6 +109,18 @@ class Decoder {
 public:
     Decoder() {}
     virtual ~Decoder() {}
+
+    /*
+     * Decode the instance, this method is a controller,
+     * execute:
+     *  - init lattice
+     *  - decode projective
+     *  - get result
+     *  - free lattice
+     * in sequence.
+     *
+     *  @param[in]  inst    the instance
+     */
     void decode(Instance * inst) {
         init_lattice(inst);
         decode_projective(inst);

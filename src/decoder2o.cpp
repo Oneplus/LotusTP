@@ -214,7 +214,7 @@ void Decoder2O::decode_projective(const Instance * inst) {
                         }
 
                         if (feat_opt.use_labeled_sibling) {
-                            int l = right->_label_s_t;
+                            int l = left->_label_s_t;
                             score += inst->labeled_sibling_scores[s][r][r][l];
                         }
                     }

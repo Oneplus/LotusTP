@@ -6,6 +6,7 @@
 namespace ltp {
 namespace parser {
 
+// 2nd-order decoder with dependency features and sibling features
 class Decoder2O : public Decoder {
 public:
     Decoder2O(int _L = 1) : L(_L) {}

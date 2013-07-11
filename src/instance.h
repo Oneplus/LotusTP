@@ -61,10 +61,24 @@ public:
         }
     }
 
+    /*
+     * Get length of the instance. Instance's length is defined as number
+     * of form tokens.
+     *
+     *  @return     size_t              the number of tokens
+     */
     size_t size() const {
         return forms.size();
     }
 
+    /*
+     * Get number of error of the heads. Prepositive condition is number 
+     * of predicted_heads greater than 0 and number of predicated_heads
+     * equals number of heads.
+     *
+     *  @param[in]  ignore_punctation   specify whether ignore punction
+     *  @return     int                 the number of errors
+     */
     int num_error_heads(bool ignore_punctation = true) const {
         if (predicted_heads.size() == 0) {
             return size();

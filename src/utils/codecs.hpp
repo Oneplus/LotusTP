@@ -15,7 +15,6 @@ namespace strutils {
 namespace codecs {
 enum { UTF8, GBK };
 
-using namespace std;
 inline int decode(const std::string & s, 
         std::vector<std::string>& chars, int encoding=UTF8) {
     unsigned long int idx=0;

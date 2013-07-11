@@ -5,8 +5,6 @@
 
 #include "instance.h"
 #include "model.h"
-#include "conllreader.h"
-#include "conllwriter.h"
 #include "extractor.h"
 #include "decoder.h"
 

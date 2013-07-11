@@ -2,6 +2,8 @@
 #include "options.h"
 #include "decoder1o.h"
 #include "decoder2o.h"
+#include "conllreader.h"
+#include "conllwriter.h"
 
 #include "treeutils.hpp"
 
@@ -117,7 +119,7 @@ bool Parser::parse_cfg(utility::ConfigParser & cfg) {
     feat_opt.use_sibling_basic          =   false;
     feat_opt.use_sibling_linear         =   false;
 
-    feat_opt.use_last_sibling           =   true;
+    feat_opt.use_last_sibling           =   false;
     feat_opt.use_distance_in_features   =   true;
     // feat_opt.use_distance_in_features = false;
 
@@ -378,7 +380,7 @@ void Parser::extract_features(Instance * inst) {
                         inst->dependency_features[hid][cid]->idx[j] = cache_again[j];
                     }
                 } else {
-                    for (int l = 0; l < model->num_deprels(); ++ l) {
+                    for (int l = 0; l < L; ++ l) {
                         inst->labeled_dependency_features[hid][cid][l] = new FeatureVector;
                         inst->labeled_dependency_features[hid][cid][l]->n = num_feat;
                         inst->labeled_dependency_features[hid][cid][l]->idx = 0;
@@ -453,7 +455,7 @@ void Parser::extract_features(Instance * inst) {
                         inst->sibling_features[hid][cid][sid]->idx[j] = cache_again[j];
                     }
                 } else {
-                    for (int l = 0; l < model->num_deprels(); ++ l) {
+                    for (int l = 0; l < L; ++ l) {
                         inst->labeled_sibling_features[hid][cid][sid][l] = new FeatureVector;
                         inst->labeled_sibling_features[hid][cid][sid][l]->n = num_feat;
                         inst->labeled_sibling_features[hid][cid][sid][l]->idx = 0;
@@ -541,10 +543,10 @@ void Parser::train(void) {
         }
     }
 
-    ifstream fin("lgdpj.fv.tmp", std::ifstream::binary);
+    // ifstream fin("lgdpj.fv.tmp", std::ifstream::binary);
     for (int iter = 0; iter < train_opt.max_iter; ++ iter) {
         TRACE_LOG("Start training epoch #%d.", (iter + 1));
-        fin.seekg(0, fin.beg);
+        // fin.seekg(0, fin.beg);
 
         // random_shuffle(train_dat.begin(), train_dat.end());
         for (int i = 0; i < train_dat.size(); ++ i) {

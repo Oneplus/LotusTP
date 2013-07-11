@@ -6,34 +6,40 @@
 namespace ltp {
 namespace parser {
 
-using namespace std;
+/*
+ * define const
+ */
+// instance related const
+// root const
+const std::string ROOT_FORM     =   "RT#";
+const std::string ROOT_LEMMA    =   "RT#";
+const std::string ROOT_CPOSTAG  =   "RT#";
+const std::string ROOT_POSTAG   =   "RT#";
+const std::string ROOT_FEAT     =   "RT#";
+const std::string ROOT_DEPREL   =   "RT#";
 
-const string ROOT_FORM      =   "RT#";
-const string ROOT_LEMMA     =   "RT#";
-const string ROOT_CPOSTAG   =   "RT#";
-const string ROOT_POSTAG    =   "RT#";
-const string ROOT_FEAT      =   "RT#";
-const string ROOT_DEPREL    =   "RT#";
+// weired things.
+const std::string PRP           =   "PRP";
+const std::string PRP2          =   "PRP2";
+const std::string OOV           =   "-OOV-";
 
-const string PRP            =   "PRP";
-const string PRP2           =   "PRP2";
+// none const
+const std::string NONE_FORM     =   "##";
+const std::string NONE_LEMMA    =   "##";
+const std::string NONE_CPOSTAG  =   "##";
+const std::string NONE_POSTAG   =   "##";
+const std::string NONE_FEAT     =   "##";
 
-const string OOV            =   "-OOV-";
-const string NONE_FORM      =   "##";
-const string NONE_LEMMA     =   "##";
-const string NONE_CPOSTAG   =   "##";
-const string NONE_POSTAG    =   "##";
-const string NONE_FEAT      =   "##";
+const std::string FSEP          =   "-";
 
-const string FSEP           =   "-";
+const double DOUBLE_POS_INF     =   1e20;
+const double DOUBLE_NEG_INF     =   -1e20;
+const double EPS                =   1e-10;
 
-const double DOUBLE_POS_INF =   1e20;
-const double DOUBLE_NEG_INF =   -1e20;
-const double EPS            =   1e-10;
-
-const size_t CMP            =   0;
-const size_t INCMP          =   1;
-const size_t SIBSP          =   2;
+// span type const
+const size_t CMP                =   0;
+const size_t INCMP              =   1;
+const size_t SIBSP              =   2;
 
 enum {
     DEPU,       //  Unlabeled Standard Features

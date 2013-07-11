@@ -1,3 +1,8 @@
+/*
+ * A light weight template engine which support few syntax.
+ * It's designed for feature extraction in various NLP tasks.
+ * Speed is mainly concerned.
+ */
 #ifndef __TEMPLATE_HPP__
 #define __TEMPLATE_HPP__
 
@@ -89,32 +94,56 @@ private:
 
 template<typename T> __Template_Token_Cache<T> * __Template_Token_Cache<T>::_instance = NULL;
 
+// The template class
 class Template {
 public:
+    // The template data class
     class Data {
     public:
-        Data() : _tokens(0) {
+        /*
+         * Constructor for Template::Data
+         */
+        // make a copy from the Token_Cache and linke all value
+        // to the key.
+        Data() : _keys(0), _values(0) {
             _num_tokens = __Template_Token_Cache<void>::get_cache()->num_tokens();
-            __Template_Token_Cache<void>::get_cache()->copy( _tokens );
+            __Template_Token_Cache<void>::get_cache()->copy( _keys );
+            _values = new char*[_num_tokens];
+            for (int i = 0; i < _num_tokens; ++ i) {
+                _values[i] = _keys[i];
+            }
         }
 
         ~Data() {
             for (int i = 0; i < _num_tokens; ++ i) {
-                delete [](_tokens[i]);
+                if (_values[i] != _keys[i]) {
+                    delete [](_values[i]);
+                }
+                delete [](_keys[i]);
             }
-            delete [](_tokens);
+            delete [](_keys);
+            delete [](_values);
         }
 
+        /*
+         * set (key, value) pair to the Template::Data
+         *
+         *  @param[in]  key     the key
+         *  @param[in]  val     the value
+         *  @return     bool    true on success, otherwise false
+         */
         bool set(const char * key, const char * val) {
             for (int i = 0; i < _num_tokens; ++ i) {
-                // i didnt check case like "pid={pid}", for speed concerning.
+                // i didnt check case like "pid={pid}", for speed concerns.
                 // users should guarantee no such template is used.
-                if (!strcmp(_tokens[i], key)) {
+                if (!strcmp(_keys[i], key)) {
                     int len = strlen(val) + 1;
                     char * new_key = new char[len];
                     memcpy(new_key, val, len);
-                    delete [](_tokens[i]);
-                    _tokens[i] = new_key;
+                    if (_values[i] != _keys[i]) {
+                        delete [](_values[i]);
+                    }
+                    _values[i] = new_key;
                     return true;
                 }
             }
@@ -122,6 +151,13 @@ public:
             return false;
         }
 
+        /*
+         * A string wrapper for bool set(const char * key, const char * val)
+         *
+         *  @param[in]  key     the key
+         *  @param[in]  val     the value
+         *  @return     bool    true on success, otherwise false
+         */
         bool set(const char * key, const std::string & val) {
             return set( key, val.c_str() );
         }
@@ -130,11 +166,12 @@ public:
             if (i < 0 || i >= _num_tokens) {
                 return 0;
             }
-            return _tokens[i];
+            return _values[i];
         }
 
     private:
-        char ** _tokens;
+        char ** _keys;
+        char ** _values;
         int _num_tokens;
     };
 
@@ -150,6 +187,8 @@ public:
 
         int right_bracket = -1;
         int left_bracket = -1;
+
+        // get number of tokens in the template
         for (s = buffer; *s; ++ s) {
             if ((*s) == '{') {
                 left_bracket = s - buffer;
@@ -164,18 +203,16 @@ public:
             }
         }
 
-        /*replacements = new int[num_items];
-        items = new char *[num_items];*/
         items = new int[num_items];
 
         right_bracket = -1;
         int i = 0;
+
+        // loop over all the tokens and push them into the cache.
         for (s = buffer; *s; ++ s) {
             if ((*s) == '{') {
                 left_bracket = s - buffer;
                 if (right_bracket + 1 < left_bracket) {
-                    //replacements[i] = -1;
-                    //items[i] = buffer + right_bracket + 1;
                     buffer[left_bracket] = 0;
                     items[i] = __Template_Token_Cache<void>::get_cache()->push_back(
                             buffer + right_bracket + 1);
@@ -185,16 +222,7 @@ public:
 
             if ((*s) == '}') {
                 right_bracket = s - buffer;
-                /*int idx = 0;
-                for (int j = left_bracket + 1;
-                        j < right_bracket;
-                        ++ j) {
-                    idx *= 10;
-                    idx += (buffer[j] - '0');
-                }*/
-
                 buffer[right_bracket] = 0;
-                // replacements[i] = idx;
                 items[i] = __Template_Token_Cache<void>::get_cache()->push_back(
                         buffer + left_bracket + 1);
 
@@ -218,19 +246,15 @@ public:
     }
 
     /*
-     * Generate the template from template and 
+     * Generate the template from templates and save it into a string
      *
-     *
+     *  @param[in]  data    the template data
+     *  @param[out] ret     the output string
      */
     inline bool render(const Data & data, std::string & ret) {
         ret.clear();
 
         for (int i = 0; i < num_items; ++ i) {
-            /*if (replacements[i] >= 0) {
-                ret.append( data.find( items[i] )->second );
-            } else {
-                ret.append( items[i] );
-            }*/
             ret.append( data.index(items[i]) );
         }
 
@@ -240,8 +264,6 @@ private:
     int num_items;
     int * items;
     char * buffer;
-    /*int * replacements;
-    char ** items;*/
 };
 }       //  end for namespace utility
 }       //  end for namespace ltp

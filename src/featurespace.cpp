@@ -17,8 +17,8 @@ int FeatureSpace::retrieve(int gid, int tid, const char * key, bool create) {
 }
 
 int FeatureSpace::index(int gid, int tid, const char * key, int lid) {
+    // no boundary check, which is very dangerous
     int bid = groups[gid]->retrieve(tid, key, false);
-    // std::cout << gid << " " << tid << " " << key << " " << lid << " " << bid <<  std::endl;
     if (bid < 0) return -1;
 
     return bid * _num_deprels + lid + offsets[gid];
