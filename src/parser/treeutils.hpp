@@ -158,6 +158,65 @@ private:
     bool _last_sibling;
 };
 
+class GRDTreeSpaceIterator {
+public:
+    GRDTreeSpaceIterator(int len, bool no_grand = true) : 
+        _len(len), 
+        _state(0),
+        _no_grand(no_grand) {
+        ++ (*this);
+    }
+
+    inline int hid() {
+        return _hid;
+    }
+
+    inline int cid() {
+        return _cid;
+    }
+
+    inline int gid() {
+        return _gid;
+    }
+
+    bool end() {
+        _hid >= _len;
+    }
+
+    void operator ++(void) {
+        switch(_state) {
+            case 0:
+                for (_hid = 0; _hid < _len; ++ _hid) {
+                    for (_cid = 1; _cid < _len; ++ _cid) {
+                        if (_cid == _hid) {
+                            continue;
+                        }
+                        _step = (_hid < _cid ? 1 : -1);
+                        _end = (_hid < _cid ? _len : 0);
+
+                        for (_gid = _hid; _gid != _end; _gid += _step) {
+                            if ((_gid == _hid || _gid == _cid) && !_no_grand) {
+                                continue;
+                            }
+                            _state = 1;
+                            return;
+            case 1:;
+                        }
+                    }
+                }
+        }
+    }
+private:
+    int _len;
+    int _hid;
+    int _cid;
+    int _gid;
+    int _step;
+    int _end;
+    int _state;
+    bool _no_grand;
+};
+
 class DEPIterator {
 public:
     DEPIterator(const std::vector<int> & heads) : 
@@ -311,6 +370,14 @@ private:
 
     int ** _children[2];
     int *  _num_children[2];
+};
+
+class GRDIterator {
+public:
+    GRDIterator(const std::vector<int> & heads) : _heads(heads) {}
+
+private:
+    const std::vector<int> & _heads;
 };
 
 }       //  end for namespace treeutils

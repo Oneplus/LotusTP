@@ -4,6 +4,10 @@
 namespace ltp {
 namespace parser {
 
+// ================================================================ //
+// Decoder using dependency and sibling features                    //
+// ================================================================ //
+
 void Decoder2O::init_lattice(const Instance * inst) {
     int len = inst->size();
     _lattice_cmp.resize(len, len);
@@ -320,6 +324,21 @@ void Decoder2O::__BUILD_TREE(Instance * inst, const LatticeItem * item) {
     }
 
     __BUILD_TREE(inst, item->_right);
+}
+
+// ================================================================ //
+// 2nd-order Decoder using dependency, sibling and grand features   //
+// ================================================================ //
+void Decoder2OCarreras::init_lattice(const Instance * inst) {
+}
+
+void Decoder2OCarreras::decode_projective(const Instance * inst) {
+}
+
+void Decoder2OCarreras::get_result(Instance * inst) {
+}
+
+void Decoder2OCarreras::free_lattice() {
 }
 
 }   //  end for namespace parser

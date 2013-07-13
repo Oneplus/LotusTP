@@ -712,6 +712,7 @@ void Parser::test() {
     }
 
     CoNLLReader reader(f);
+    CoNLLWriter writer(cout);
 
     Instance * inst = NULL;
 
@@ -731,22 +732,54 @@ void Parser::test() {
 
     cerr << get_time() - before << endl;
     before = get_time();
+
+    int head_correct = 0;
+    int label_correct = 0;
+    int total_rels = 0;
+
     while ((inst = reader.next())) {
+        int len = inst->size();
+        if (model_opt.labeled) {
+            inst->deprelsidx.resize(len);
+            for (int i = 1; i < len; ++ i) {
+                inst->deprelsidx[i] = model->deprels.index(inst->deprels[i].c_str());
+            }
+        }
+
         extract_features(inst);
-        /*int len = inst->labeled_dependency_features.total_size();
-        for (int i = 0; i < len; ++ i) {
-            cout << inst->labeled_dependency_features.c_buf()[i] << endl;
-        }*/
         calculate_score(inst, model->param);
 
         decoder->decode(inst);
 
-        instance_verify(inst, cout, true);
+        if (model_opt.labeled) {
+            inst->predicted_deprels.resize(len);
+            for (int i = 1; i < len; ++ i) {
+                inst->predicted_deprels[i] = model->deprels.at(inst->predicted_deprelsidx[i]);
+            }
+        }
 
+        writer.write(inst);
+
+        total_rels += inst->num_rels();
+        head_correct += inst->num_correct_heads();
+        label_correct += inst->num_correct_heads_and_labels();
         delete inst;
     }
     double after = get_time();
     cerr << after - before << endl;
+
+    TRACE_LOG("UAS: %.4lf ( %d / %d )", 
+            (double)head_correct / total_rels, 
+            head_correct, 
+            total_rels);
+
+    if (model_opt.labeled) {
+        TRACE_LOG("LAS: %.4lf ( %d / %d )", 
+                (double)label_correct / total_rels, 
+                label_correct, 
+                total_rels);
+    }
+
     sleep(1000000);
 }
 

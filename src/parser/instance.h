@@ -11,7 +11,6 @@
 namespace ltp {
 namespace parser {
 
-using namespace std;
 using namespace ltp::math;
 
 class Instance {
@@ -358,20 +357,20 @@ public:
     }
 public:
 
-    vector<string>  forms;      /* */
-    vector<string>  lemmas;     /* */
-    vector< vector<string> > chars;
-    vector<string>  postags;    /* */
+    std::vector< std::string >                  forms;      /*< the forms */
+    std::vector< std::string >                  lemmas;     /*< the lemmas */
+    std::vector< std::vector< std::string> >    chars;      /*< the characters */
+    std::vector< std::string >                  postags;    /*< the postags */
 
-    vector<int>     heads;
-    vector<int>     deprelsidx;
-    vector<string>  deprels;
-    SparseVec       features;
+    std::vector<int>                            heads;
+    std::vector<int>                            deprelsidx;
+    std::vector< std::string >                  deprels;
+    std::vector<int>                            predicted_heads;
+    std::vector<int>                            predicted_deprelsidx;
+    std::vector< std::string >                  predicted_deprels;
 
-    vector<int>     predicted_heads;
-    vector<int>     predicted_deprelsidx;
-    vector<string>  predicted_deprels;
-    SparseVec       predicted_features;
+    SparseVec               predicted_features;
+    SparseVec               features;
 
     /* features group */
     Vec<FeatureVector *>    postag_unigram_features;
@@ -389,9 +388,9 @@ public:
     Mat4<FeatureVector *>   labeled_sibling_features;
     Mat4<double>            labeled_sibling_scores;
 
-    vector<int>             verb_cnt;
-    vector<int>             conj_cnt;
-    vector<int>             punc_cnt;
+    std::vector<int>             verb_cnt;
+    std::vector<int>             conj_cnt;
+    std::vector<int>             punc_cnt;
 };  // end for class Instance
 }   // end for namespace parser
 }   // end for namespace ltp

@@ -26,6 +26,22 @@ private:
     void __BUILD_TREE(Instance * inst, const LatticeItem * item);
 };
 
+// 2nd-order decoder with dependency, sibling and grand features
+class Decoder2OCarreras : public Decoder {
+public:
+    Decoder2OCarreras(int _L = 1) : L(_L) {}
+
+public:
+    void init_lattice(const Instance * inst);
+    void decode_projective(const Instance * inst);
+    void get_result(Instance *  inst);
+    void free_lattice();
+private:
+    int L;
+    Mat3< const LatticeItem * > _lattice_cmp;
+    Mat3< const LatticeItem * > _lattice_incmp;
+};
+
 }   //  end for namespace parser
 }   //  end for namespace ltp
 
