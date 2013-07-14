@@ -44,76 +44,6 @@ void Extractor::__GET_DISTANCE_1_2_36_7(int head_id, int child_id, string& dista
 
 const string POSUExtractor::prefix = "PU-";
 
-int POSUExtractor::extract1o(Instance * inst, int hid, vector<string> & cache) {
-    int len = inst->size();
-    inst->postag_unigram_features.resize(len);
-    inst->postag_unigram_scores.resize(len);
-
-    const string &form = inst->forms[hid];
-    const string &left_form = (hid > 0  ? inst->forms[hid - 1] : NONE_FORM);
-    const string &right_form =  (hid + 1 < len ? inst->forms[hid + 1] : NONE_FORM);
-
-    string          feat;
-
-    paste(feat, prefix, "0=", form);            PUSH(feat);
-    paste(feat, prefix, "W-1=", left_form);     PUSH(feat);
-    paste(feat, prefix, "W-1=", right_form);    PUSH(feat);
-
-    if (feat_opt.use_postag_chars) {
-        const vector<string> &chars = inst->chars[hid];
-        const string &left_char  = (hid > 0 ? LAST(inst->chars[hid - 1]) : NONE_FORM);
-        const string &right_char = (hid + 1 < len ? FIRST(inst->chars[hid + 1]) : NONE_FORM);
-
-        string first_char = FIRST(chars);
-        string last_char  = LAST(chars);
-
-        int LL = LEN(chars);
-
-        if (LEN(chars) == 1) {
-            first_char  += "#1";
-            last_char   += "#1";
-        }
-
-        paste(feat, prefix, "1=", form, FSEP, left_char);   PUSH(feat);
-        paste(feat, prefix, "2=", form, FSEP, right_char);  PUSH(feat);
-
-        if (LEN(chars) == 1) {
-            paste(feat, prefix, "3=", left_char, FSEP, form, FSEP, right_char); PUSH(feat);
-        }
-
-        paste(feat, prefix, "4=", first_char);  PUSH(feat);
-        paste(feat, prefix, "5=", last_char);   PUSH(feat);
-
-        if (LEN(chars) > 2) {
-            for (int j = 2; j < LL - 1; ++ j) {
-                feat = prefix + "6=" + chars[j];                        PUSH(feat);
-                feat = prefix + "7=" + first_char + FSEP + chars[j];    PUSH(feat);
-                feat = prefix + "8=" + chars[j] + FSEP + last_char;     PUSH(feat);
-            }
-        }
-
-        for (int j = 1; j < LL; ++ j) {
-            if (chars[j] == chars[j - 1]) {
-                feat = prefix + "cc=" + chars[j];   PUSH(feat);
-            }
-        }
-
-        string curprefix = "";
-        string cursuffix = "";
-
-        for (int j = 0; j <= 3 && j < LL; ++ j) {
-            curprefix = curprefix + chars[j];
-            cursuffix = chars[LL-j-1] + cursuffix;
-
-            feat = prefix + "prefix=" + curprefix;  PUSH(feat);
-            feat = prefix + "suffix=" + cursuffix;  PUSH(feat);
-        }
-
-        int length = (LL < 5 ? LL : 5); stringstream S; S << length;
-        feat = prefix + "length=" + S.str();  PUSH(feat);
-    }   //  end for if (use_pos_chars) 
-}   //  end for int extract
-
 // ================================================================ //
 // Dependency Features Extractor                                    //
 //  feature templates is listed in `extractor.h`                    //
@@ -571,6 +501,119 @@ int SIBExtractor::extract3o(Instance * inst, int hid, int cid, int sid, vector< 
     data.set( "p-sid+1", ((first_child || last_child || sid+1 >= len) ? NONE_POSTAG : inst->postags[sid+1]));
     data.set( "dir",     dir );
     data.set( "dist",    dist );
+
+    feat.reserve(1024);
+
+    for (int i = 0; i < templates.size(); ++ i) {
+        templates[i]->render(data, feat);
+        cache[i].push_back(feat);
+    }
+}
+
+// ================================================================ //
+// Grand Features Extractor                                         //
+//  feature templates is listed in `extractor.h`                    //
+//  the GRDExtractor is a singleton, which only be construct once   //
+//  during the life of the program.                                 //
+// ================================================================ //
+
+// Initialize the static member,
+GRDExtractor * GRDExtractor::instance_ = 0;
+vector<Template *> GRDExtractor::templates;
+
+GRDExtractor * GRDExtractor::extractor() {
+    if (0 == instance_) {
+        instance_ = new GRDExtractor;
+    }
+    return instance_;
+}
+
+GRDExtractor::GRDExtractor() {
+    templates.reserve(100);
+
+    if (feat_opt.use_grand_basic) {
+        templates.push_back(new Template("21={p-hid}-{p-cid}-{p-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("21?={f-hid}-{p-cid}-{p-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("22?={p-hid}-{f-cid}-{p-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("23?={p-hid}-{p-cid}-{f-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("22={p-hid}-{p-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("23={p-cid}-{p-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("24={f-hid}-{f-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("25={f-cid}-{f-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("26={p-hid}-{f-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("27={p-cid}-{f-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("28={f-hid}-{p-gid}-{dir}-{gdir}"));
+        templates.push_back(new Template("29={f-cid}-{p-gid}-{dir}-{gdir}"));
+    }
+
+    if (feat_opt.use_grand_linear) {
+        templates.push_back(new Template("42={p-gid}-{p-gid+1}-{p-cid}-{dir}-{gdir}"));
+        templates.push_back(new Template("43={p-gid-1}-{p-gid}-{p-cid}-{dir}-{gdir}"));
+        templates.push_back(new Template("44={p-gid}-{p-cid}-{p-cid+1}-{dir}-{gdir}"));
+        templates.push_back(new Template("45={p-gid}-{p-cid-1}-{p-cid}-{dir}-{gdir}"));
+        templates.push_back(new Template("46={p-gid}-{p-gid+1}-{p-cid-1}-{p-cid}-{dir}-{gdir}"));
+        templates.push_back(new Template("47={p-gid-1}-{p-gid}-{p-cid-1}-{p-cid}-{dir}-{gdir}"));
+        templates.push_back(new Template("48={p-gid}-{p-gid+1}-{p-cid}-{p-cid+1}-{dir}-{gdir}"));
+        templates.push_back(new Template("49={p-gid-1}-{p-gid}-{p-cid}-{p-cid+1}-{dir}-{gdir}"));
+        templates.push_back(new Template("50={p-gid}-{p-gid+1}-{p-hid}-{dir}-{gdir}"));
+        templates.push_back(new Template("51={p-gid-1}-{p-gid}-{p-hid}-{dir}-{gdir}"));
+        templates.push_back(new Template("52={p-gid}-{p-hid}-{p-hid+1}-{dir}-{gdir}"));
+        templates.push_back(new Template("53={p-gid}-{p-hid-1}-{p-hid}-{dir}-{gdir}"));
+        templates.push_back(new Template("54={p-gid}-{p-gid+1}-{p-hid-1}-{p-hid}-{dir}-{gdir}"));
+        templates.push_back(new Template("55={p-gid-1}-{p-gid}-{p-hid-1}-{p-hid}-{dir}-{gdir}"));
+        templates.push_back(new Template("56={p-gid}-{p-gid+1}-{p-hid}-{p-hid+1}-{dir}-{gdir}"));
+        templates.push_back(new Template("57={p-gid-1}-{p-gid}-{p-hid}-{p-hid+1}-{dir}-{gdir}"));
+    }
+}
+
+GRDExtractor::~GRDExtractor() {
+    for (int i = 0; i < templates.size(); ++ i) {
+        delete templates[i];
+    }
+}
+
+int GRDExtractor::num_templates() {
+    if (0 == instance_) {
+        instance_ = new GRDExtractor;
+    }
+
+    return templates.size();
+}
+
+
+int GRDExtractor::extract3o(Instance * inst, int hid, int cid, int gid, vector< StringVec > & cache) {
+    int len = inst->size();
+
+    bool no_grand = (hid == gid || cid == gid);
+    bool no_grandr = (cid == gid);
+
+    string dir, gdir, feat;
+
+    __GET_DIRECTION(hid, cid, dir);
+
+    if (no_grand) {
+        gdir = (cid == gid ? "#R" : "#L");
+    } else {
+        __GET_DIRECTION(cid, gid, gdir);
+    }
+
+    Template::Data data;
+    bool is_root = (hid == 0);
+
+    data.set( "f-hid",   inst->forms[hid] );
+    data.set( "f-gid",   (no_grand ? NONE_FORM : inst->forms[gid]));
+    data.set( "f-cid",   inst->forms[cid] );
+    data.set( "p-hid",   inst->postags[hid] );
+    data.set( "p-gid",   (no_grand ? NONE_POSTAG : inst->postags[gid]));
+    data.set( "p-cid",   inst->postags[cid] );
+    data.set( "p-hid-1", ((hid <= 1) ? NONE_POSTAG : inst->postags[hid - 1]) );
+    data.set( "p-hid+1", ((is_root || hid+1 >= len) ? NONE_POSTAG : inst->postags[hid + 1]) );
+    data.set( "p-cid-1", ((cid <= 1) ? NONE_POSTAG : inst->postags[cid - 1]) );
+    data.set( "p-cid+1", ((cid + 1 >= len) ? NONE_POSTAG : inst->postags[cid +1]) );
+    data.set( "p-gid-1", ((no_grand || gid <= 1) ? NONE_POSTAG : inst->postags[gid-1]));
+    data.set( "p-gid+1", ((no_grand || gid+1 >= len) ? NONE_POSTAG : inst->postags[gid+1]));
+    data.set( "dir",     dir );
+    data.set( "gdir",    gdir );
 
     feat.reserve(1024);
 

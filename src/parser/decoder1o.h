@@ -22,8 +22,6 @@ protected:
     void decode_projective(const Instance * inst);
     void get_result(Instance * inst);
     void free_lattice();
-private:
-    void __BUILD_TREE(Instance * inst, const LatticeItem * item); 
 protected:
     int L;
 

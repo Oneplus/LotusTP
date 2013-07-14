@@ -13,8 +13,6 @@
 namespace ltp {
 namespace math {
 
-using namespace ltp::parser;
-
 class SparseVec {
 public:
 #ifdef _WIN32
@@ -69,14 +67,16 @@ public:
         }
     }
 
-    inline void add(const FeatureVector * other,
+    inline void add(const int * idx,
+            const double * val,
+            const int n,
             const double scale) {
-        if (!other) {
+        if (!idx) {
             return;
         }
-        int n = other->n;
-        const int * idx = other->idx;
-        const double * val = other->val;
+        // int n = other->n;
+        // const int * idx = other->idx;
+        // const double * val = other->val;
 
         if (val == NULL) {
             for (int i = 0; i < n; ++ i) {
@@ -86,6 +86,30 @@ public:
         } else {
             for (int i = 0; i < n; ++ i) {
                 _vec[idx[i]] += (scale * val[i]);
+            }
+        }
+    }
+
+    inline void add(const int * idx, 
+            const double * val,
+            const int n, 
+            const int loff,
+            const double scale) {
+        if (!idx) {
+            return ;
+        }
+
+        if (val == NULL) {
+            for (int i = 0; i < n; ++ i) {
+                int id = idx[i] + loff;
+                if (_vec.find(id) == _vec.end()) _vec[id] = 0.;
+                _vec[id] += scale;
+            }
+        } else {
+            for (int i = 0; i < n; ++ i) {
+                int id = idx[i] + loff;
+                if (_vec.find(id) == _vec.end()) _vec[id] = 0.;
+                _vec[id] += (scale * val[i]);
             }
         }
     }

@@ -22,8 +22,6 @@ private:
     Mat< const LatticeItem * > _lattice_incmp;
     Mat< const LatticeItem * > _lattice_sib;
 
-private:
-    void __BUILD_TREE(Instance * inst, const LatticeItem * item);
 };
 
 // 2nd-order decoder with dependency, sibling and grand features
@@ -40,6 +38,7 @@ private:
     int L;
     Mat3< const LatticeItem * > _lattice_cmp;
     Mat3< const LatticeItem * > _lattice_incmp;
+
 };
 
 }   //  end for namespace parser

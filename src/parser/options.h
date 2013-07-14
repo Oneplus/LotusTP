@@ -40,17 +40,23 @@ struct FeatureOptions {
     bool use_sibling;               /*< use sibling feature */
     bool use_sibling_basic;         /*< use sibling basic feature */
     bool use_sibling_linear;        /*< use sibling linear feature */
+
+    bool use_grand;                 /*< use grand features, not implemented */
+    bool use_grand_basic;
+    bool use_grand_linear;
+
     // sth weired
     bool use_last_sibling;
+    bool use_no_grand;
 
     // automaticall calculate
     bool use_distance_in_features;  /*< use distance, always true */
     bool use_unlabeled_dependency;  /*< equals to !model.labeled and use_dependency */
     bool use_labeled_dependency;    /*< equals to model.labeled and use_dependency */
-    bool use_unlabeled_sibling;     /*< equals to !model.labeled and use_dependency */
-    bool use_labeled_sibling;       /*< equals to model.labeled adn use_dependency */
-
-    bool use_grand;                 /*< use grand features, not implemented */
+    bool use_unlabeled_sibling;     /*< equals to !model.labeled and use_sibling */
+    bool use_labeled_sibling;       /*< equals to model.labeled and use_sibling */
+    bool use_unlabeled_grand;       /*< equals to !model.labeled and use_grand */
+    bool use_labeled_grand;         /*< equals to model.labeled and use_grand */
 
     bool use_lemma;
     bool use_coarse_postag;

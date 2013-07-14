@@ -175,6 +175,58 @@ private:
     static vector<Template *> templates;
 };  //  end for SiblingExtractor
 
+/*
+ * Grand features extractor. Grand features is used in 2nd-order parsing model
+ * Feature template is shown below (i is head, j is child while g is grandchild).
+ *
+ *  - basic sibling features
+ *  -- pos(i) pos(j) pos(g)
+ *  -- form(i) pos(j) pos(g)
+ *  -- pos(i) form(j) pos(g)
+ *  -- pos(i) pos(j) form(g)
+ *  -- pos(i) pos(g)
+ *  -- pos(j) pos(g)
+ *  -- form(i) form(g)
+ *  -- form(i) form(g)
+ *  -- pos(i) form(g)
+ *  -- pos(j) form(g)
+ *  -- form(i) pos(g)
+ *  -- form(j) pos(g)
+ *
+ *  - linear sibling features
+ *  -- pos(g) pos(g+1) pos(j)
+ *  -- pos(g-1) pos(g) pos(j)
+ *  -- pos(g) pos(j) pos(j+1)
+ *  -- pos(g) pos(j-1) pos(j)
+ *  -- pos(g) pos(g+1) pos(j-1) pos(j)
+ *  -- pos(g-1) pos(g) pos(j-1) pos(j)
+ *  -- pos(g) pos(g+1) pos(j) pos(j+1)
+ *  -- pos(g-1) pos(g) pos(j) pos(j+1)
+ *  -- pos(g) pos(g+1) pos(i)
+ *  -- pos(g-1) pos(g) pos(i)
+ *  -- pos(g) pos(i-1) pos(i)
+ *  -- pos(g) pos(i) pos(i+1)
+ *  -- pos(g) pos(i-1) pos(i)
+ *  -- pos(g) pos(g+1) pos(i-1) pos(i)
+ *  -- pos(g-1) pos(g) pos(i-1) pos(i)
+ *  -- pos(g) pos(g+1) pos(i) pos(i+1)
+ *  -- pos(g-1) pos(g) pos(i-1) pos(i)
+ */
+
+class GRDExtractor : public Extractor {
+public:
+    static GRDExtractor * extractor();
+    static int num_templates();
+    static int extract3o(Instance * inst, int hid, int cid, int gid, vector< StringVec > & cache);
+protected:
+    GRDExtractor();
+    ~GRDExtractor();
+
+private:
+    static GRDExtractor * instance_;
+    static vector<Template *> templates;
+};  //  end for GRDExtractor
+
 }   //  end for namespace parser
 }   //  end for namespace ltp
 

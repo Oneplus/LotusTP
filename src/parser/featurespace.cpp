@@ -75,6 +75,26 @@ int FeatureSpace::build_feature_space(int num_deprels, const std::vector<Instanc
             }
         }   //  end for if feat_opt.use_sibling
 
+        if (feat_opt.use_grand) {
+            int N = GRDExtractor::num_templates();
+
+            for (treeutils::GRDIterator itx(inst->heads, feat_opt.use_no_grand); !itx.end(); ++ itx) {
+                int hid = itx.hid();
+                int cid = itx.cid();
+                int gid = itx.gid();
+
+                std::vector< StringVec > cache;
+                cache.resize(N);
+                GRDExtractor::extract3o(inst, hid, cid, gid, cache);
+
+                for (int k = 0; k < cache.size(); ++ k) {
+                    for (int itx = 0; itx < cache[k].size(); ++ itx) {
+                        retrieve(GRD, k, cache[k][itx], true);
+                    }
+                }
+            }
+        }
+
         if ((i+1) % model_opt.display_interval== 0) {
             TRACE_LOG("In building feature space, [%d] instances scanned.", i+1);
         }
@@ -95,12 +115,13 @@ int FeatureSpace::build_feature_space(int num_deprels, const std::vector<Instanc
         _offset += groups[SIB]->dim() * _num_deprels;
     }
 
-    /*offsets[GRD] = offset;
+    offsets[GRD] = _offset;
     if (feat_opt.use_grand) {
-        offset += groups[GRD]->dim() * _num_deprels;
+        _num_features += groups[GRD]->dim();
+        _offset += groups[GRD]->dim() * _num_deprels;
     }
 
-    offsets[GRDSIB] = offset;
+    /*offsets[GRDSIB] = offset;
     if (feat_opt.use_grandsibling) {
         offset += groups[GRDSIB]->dim() * _num_deprels;
     }*/
@@ -118,12 +139,12 @@ int FeatureSpace::allocate_dictionary_groups() {
         ++ ret;
     }
 
-    /*if (feat_opt.use_grand) {
-        groups[GRD] = new DictionaryGroup( GRDExtractor::num_templates() );
+    if (feat_opt.use_grand) {
+        groups[GRD] = new DictionaryCollections( GRDExtractor::num_templates() );
         ++ ret;
     }
 
-    if (feat_opt.use_grand_sibling) {
+    /*if (feat_opt.use_grand_sibling) {
         groups[GRDSIB] = new DictionaryGroup( GRDSIBExtractor::num_template() );
         ++ ret;
     }
@@ -158,11 +179,11 @@ void FeatureSpace::save(std::ostream & out) {
         groups[SIB]->dump(out);
     }
 
-    /*if (feat_opt.use_grand) {
+    if (feat_opt.use_grand) {
         groups[GRD]->dump(out);
     }
 
-    if (feat_opt.use_grand_sibling) {
+    /*if (feat_opt.use_grand_sibling) {
         groups[GRDSIB]->dump(out);
     }
 
@@ -203,12 +224,16 @@ bool FeatureSpace::load(int num_deprels, std::istream & in) {
         _offset += groups[SIB]->dim() * _num_deprels;
     }
 
-    /*if (feat_opt.use_grand) {
-        groups[GRD] = new DictionaryGroup( GRDExtractor::num_templates() );
-        ++ ret;
+    if (feat_opt.use_grand) {
+        groups[GRD] = new DictionaryCollections( GRDExtractor::num_templates() );
+        if (!groups[GRD]->load(in)) {
+            return false;
+        }
+        _num_features += groups[GRD]->dim();
+        _offset += groups[GRD]->dim() * _num_deprels;
     }
 
-    if (feat_opt.use_grand_sibling) {
+    /*if (feat_opt.use_grand_sibling) {
         groups[GRDSIB] = new DictionaryGroup( GRDSIBExtractor::num_template() );
         ++ ret;
     }

@@ -66,6 +66,8 @@ private:
 
     bool read_instances(const char * filename, vector<Instance *>& dat);
 
+    void build_decoder(void);
+
     void build_feature_space(void);
 
     void build_configuration(void);

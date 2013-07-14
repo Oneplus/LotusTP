@@ -51,6 +51,15 @@ inline int get_children( const std::vector<int> & heads,
 // This class is a Python `yield` like generator
 // detail for implement can refer to 
 // http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html
+/*
+ * dependency tree space iterator, enumerate all posibly feature
+ * 2-tuple of a tree. for example, for a tree like: 
+ *
+ *  [0] -> ROOT; [1] -> [2]; [2] -> [0]
+ *
+ * it will generate:
+ *  (0, 1), (0, 2), (1, 2), (2, 1)
+ */
 class DEPTreeSpaceIterator {
 public:
     DEPTreeSpaceIterator(int len) : 
@@ -95,7 +104,17 @@ private:
     int _state;
 };      //  end for DEPIterator
 
-// Generate all the tree space given a tree.
+/*
+ * sibling tree space iterator, enumerate all possible feature
+ * 3-tuple of a tree. for example, for a tree like: 
+ *
+ *  [0] -> ROOT; [1] -> [2]; [2] -> [0]; [3] -> [2]
+ *
+ * it will generate:
+ *
+ *  (0,1,0), (0,2,0), (0,3,0), (0,2,1), (0,2,2) (if last sibling is
+ *  configed.) ...
+ */
 class SIBTreeSpaceIterator {
 public:
     SIBTreeSpaceIterator(int len, bool last_sibling = true) :
@@ -127,7 +146,6 @@ public:
     }
 
     void operator ++(void) {
-
         switch (_state) {
             case 0:
                 for (_hid = 0; _hid < _len; ++ _hid) {
@@ -158,6 +176,16 @@ private:
     bool _last_sibling;
 };
 
+/*
+ * grand tree space iterator, enumerate all possible feature
+ * 3-tuple of a tree. for example, for a tree like: 
+ *
+ *  [0] -> ROOT; [1] -> [2]; [2] -> [0]; [3] -> [2]
+ *
+ * it will generate:
+ *
+ *  (0,1,0), (0,2,0), (0,3,0), (0,2,1), (0,2,2)  ...
+ */
 class GRDTreeSpaceIterator {
 public:
     GRDTreeSpaceIterator(int len, bool no_grand = true) : 
@@ -180,7 +208,7 @@ public:
     }
 
     bool end() {
-        _hid >= _len;
+        return _hid >= _len;
     }
 
     void operator ++(void) {
@@ -217,6 +245,16 @@ private:
     bool _no_grand;
 };
 
+/*
+ * dependency tree iterator, enumerate all possible features
+ * 2-tuple according a tree. for example, for a tree like: 
+ *
+ *  [0] -> ROOT; [1] -> [2]; [2] -> [0]; [3] -> [2]
+ *
+ * it will generate:
+ *
+ *  (0, 2), (2, 1), (2, 3)
+ */
 class DEPIterator {
 public:
     DEPIterator(const std::vector<int> & heads) : 
@@ -245,6 +283,16 @@ private:
     const std::vector<int> & _heads;
 };
 
+/*
+ * sibling tree space iterator, enumerate all possible feature
+ * 3-tuple of a tree. for example, for a tree like: 
+ *
+ *  [0] -> ROOT; [1] -> [0]; [2] -> [0]; [3] -> [0]
+ *
+ * it will generate:
+ *
+ *  (0,1,0), (0,2,1), (0,3,2), (0,3,3) (if last sibling is configed.) ...
+ */
 class SIBIterator {
 public:
     SIBIterator(const std::vector<int> & heads, bool last_sibling = true) : 
@@ -374,10 +422,123 @@ private:
 
 class GRDIterator {
 public:
-    GRDIterator(const std::vector<int> & heads) : _heads(heads) {}
+    GRDIterator(const std::vector<int> & heads, bool no_grand = true, bool outmost_grand = true) : 
+        _hid(0),
+        _state(0),
+        _no_grand(no_grand),
+        _outmost_grand(outmost_grand),
+        _len(heads.size()),
+        _heads(heads) {
+
+        for (int dir = 0; dir < 2; ++ dir) {
+            _children[dir]  = new int *[_len];
+            _num_children[dir] = new int[_len];
+
+            memset(_num_children[dir], 0, sizeof(int) * _len);
+
+            for (int i = 0; i < _len; ++ i) {
+                _children[dir][i]  = new int[_len];
+            }
+        }
+
+        for (int i = _len - 1; i > 0; -- i) {
+            int hid = _heads[i];
+            int * children = _children[1][hid];
+            if (i > hid) {
+                if (_num_children[1][hid] > 0 && outmost_grand) {
+                    continue;
+                }
+
+                children[_num_children[1][hid] ++] = i;
+            }
+        }
+
+        for (int i = 1; i < _len; ++ i) {
+            int hid = _heads[i];
+            int * children = _children[0][hid];
+            if (i < hid) {
+                if (_num_children[0][hid] > 0 && outmost_grand) {
+                    continue;
+                }
+
+                children[_num_children[0][hid] ++] = i;
+            }
+        }
+
+        if (_no_grand) {
+            for (int cid = 1; cid < _len; ++ cid) {
+                int hid = _heads[cid];
+                for (int dir = 0; dir < 2; ++ dir) {
+                    if (_num_children[dir][cid] == 0) {
+                        _children[dir][cid][_num_children[dir][cid] ++] = (dir ? hid : cid);
+                    }
+                }
+            }
+        }
+
+        ++ (*this);
+    }
+
+    ~GRDIterator() {
+        for (int i = 0; i < _len; ++ i) {
+            delete [](_children[0][i]);
+            delete [](_children[1][i]);
+        }
+
+        delete [](_children[0]);
+        delete [](_children[1]);
+
+        delete [](_num_children[0]);
+        delete [](_num_children[1]);
+    }
+
+    inline int hid(void) {
+        return _hid;
+    }
+
+    inline int cid(void) {
+        return _cid;
+    }
+
+    inline int gid(void) {
+        return _gid;
+    }
+
+    inline bool end(void) {
+        return _cid >= _len;
+    }
+
+    void operator ++(void) {
+        switch (_state) {
+            case 0:
+                for (_cid = 1; _cid < _len; ++ _cid) {
+                    _hid = _heads[_cid];
+                    for (_dir = 0; _dir < 2; ++ _dir) {
+                        for (_idx = 0; _idx < _num_children[_dir][_cid]; ++ _idx) {
+                            _gid = _children[_dir][_cid][_idx];
+                            _state = 1;
+                            return;
+            case 1:;
+                        }
+                    }
+                }
+        }
+    }
 
 private:
+    int _hid;
+    int _cid;
+    int _gid;
+    int _len;
+    int _dir;
+    int _state;
+    int _idx;
+    bool _no_grand;
+    bool _outmost_grand;
     const std::vector<int> & _heads;
+
+    int ** _children[2];
+    int * _num_children[2];
 };
 
 }       //  end for namespace treeutils

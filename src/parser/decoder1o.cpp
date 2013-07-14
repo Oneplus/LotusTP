@@ -48,23 +48,13 @@ void Decoder1O::decode_projective(const Instance * inst) {
                         double prob = (left->_prob + right->_prob);
 
                         if (feat_opt.use_unlabeled_dependency) {
-                            prob += inst->dependency_scores[s][t];
+                            prob += inst->depu_scores[s][t];
                         }
 
                         if (feat_opt.use_labeled_dependency) {
-                            prob += inst->labeled_dependency_scores[s][t][l];
+                            prob += inst->depl_scores[s][t][l];
                         }
 
-                        // @NOTE
-                        // These two features are used for postag-dependency joint model.
-                        // In pipeline model, this part should be left alone.
-                        if (feat_opt.use_postag_unigram) {
-                        }
-
-                        if (feat_opt.use_postag_bigram) {
-                        }
-
-                        // std::cerr << l <<" ";
                         const LatticeItem * const item = new LatticeItem(INCMP,
                                 s,
                                 t,
@@ -73,7 +63,6 @@ void Decoder1O::decode_projective(const Instance * inst) {
                                 right,
                                 l);
 
-                        // cerr << "INCMP " << s << "-" << t << "-" << l << endl;
                         lattice_insert(_lattice_incmp[s][t][l], item);
                     }
 
@@ -81,17 +70,11 @@ void Decoder1O::decode_projective(const Instance * inst) {
                         double prob = (left->_prob + right->_prob);
 
                         if (feat_opt.use_unlabeled_dependency) {
-                            prob += inst->dependency_scores[t][s];
+                            prob += inst->depu_scores[t][s];
                         }
 
                         if (feat_opt.use_labeled_dependency) {
-                            prob += inst->labeled_dependency_scores[t][s][l];
-                        }
-
-                        if (feat_opt.use_postag_unigram) {
-                        }
-
-                        if (feat_opt.use_postag_bigram) {
+                            prob += inst->depl_scores[t][s][l];
                         }
 
                         const LatticeItem * const item = new LatticeItem(INCMP,
@@ -189,31 +172,6 @@ void Decoder1O::free_lattice() {
     }
 }
 
-void Decoder1O::__BUILD_TREE(Instance * inst, const LatticeItem * item) {
-    if (!item) {
-        return;
-    }
-
-    __BUILD_TREE(inst, item->_left);
-
-    if (INCMP == item->_comp) {
-        inst->predicted_heads[item->_t] = item->_s;
-
-        if (model_opt.labeled) {
-            // std::cout << "label: " << item->_label_s_t << std::endl;
-            inst->predicted_deprelsidx[item->_t] = item->_label_s_t;
-        }
-    } else if (CMP == item->_comp) {
-        // do nothing;
-    } else {
-    }
-
-
-    __BUILD_TREE(inst, item->_right);
-}
-
-
-
-}
-}
+}   //  end for namespace parser
+}   //  end for namespace ltp
 

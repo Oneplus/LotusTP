@@ -3,6 +3,7 @@
 
 #include "instance.h"
 #include "settings.h"
+#include "options.h"
 #include <iostream>
 #include <list>
 
@@ -59,7 +60,7 @@ public:
         _right(right),
         _label_s_t(label_s_t) { }
 
-    // for span like C^g(s,s)
+    // for span like C(s,s)
     LatticeItem(const int g,
             const int s) :
         _g(g),
@@ -143,6 +144,29 @@ protected:
         } else {
             delete item;
         }
+    }
+
+    void __BUILD_TREE(Instance * inst, const LatticeItem * item) {
+        if (!item) {
+            return;
+        }
+
+        __BUILD_TREE(inst, item->_left);
+
+        if (INCMP == item->_comp) {
+            inst->predicted_heads[item->_t] = item->_s;
+
+            if (model_opt.labeled) {
+                inst->predicted_deprelsidx[item->_t] = item->_label_s_t;
+            }
+        } else if (CMP == item->_comp) {
+            // do nothing;
+        } else if (SIBSP == item->_comp) {
+            //  do nothing
+        } else {
+        }
+
+        __BUILD_TREE(inst, item->_right);
     }
 
 };  //  end for class decoder

@@ -105,6 +105,18 @@ void Model::save(ostream & out) {
     tmp = feat_opt.use_sibling_linear;
     write_uint(out, tmp);
 
+    // use grand
+    tmp = feat_opt.use_grand;
+    write_uint(out, tmp);
+
+    // use grand basic
+    tmp = feat_opt.use_grand_basic;
+    write_uint(out, tmp);
+
+    // use grand linear
+    tmp = feat_opt.use_grand_linear;
+    write_uint(out, tmp);
+
     // save postag lexicon
     postag_offset = out.tellp();
     postags.dump(out);
@@ -173,6 +185,15 @@ bool Model::load(istream & in) {
     // use sibling linear
     feat_opt.use_sibling_linear = (read_uint(in) == 1);
 
+    // use grand
+    feat_opt.use_grand = (read_uint(in) == 1);
+
+    // use grand basic
+    feat_opt.use_grand_basic = (read_uint(in) == 1);
+
+    // use grand linear
+    feat_opt.use_grand_linear = (read_uint(in) == 1);
+
     // automically detrieve 
     feat_opt.use_unlabeled_dependency = (!model_opt.labeled &&
             feat_opt.use_dependency);
@@ -186,7 +207,11 @@ bool Model::load(istream & in) {
     feat_opt.use_labeled_sibling = (model_opt.labeled &&
             feat_opt.use_sibling);
 
-    cout << "pass b1" << endl;
+    feat_opt.use_unlabeled_grand = (!model_opt.labeled &&
+            feat_opt.use_grand);
+
+    feat_opt.use_labeled_grand = (model_opt.labeled &&
+            feat_opt.use_grand);
 
     in.seekg(postag_offset);
     if (!postags.load(in)) {

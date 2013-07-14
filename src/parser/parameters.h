@@ -89,9 +89,9 @@ public:
         double ret = 0.;
         for (int i = 0; i < vec->n; ++ i) {
             if (vec->val) {
-                ret += p[vec->idx[i]] * vec->val[i];
+                ret += p[vec->idx[i] + vec->loff] * vec->val[i];
             } else {
-                ret += p[vec->idx[i]];
+                ret += p[vec->idx[i] + vec->loff];
             }
         }
         return ret;
