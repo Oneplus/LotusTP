@@ -224,6 +224,7 @@ bool FeatureSpace::load(int num_deprels, std::istream & in) {
         _offset += groups[SIB]->dim() * _num_deprels;
     }
 
+    offsets[GRD] = _offset;
     if (feat_opt.use_grand) {
         groups[GRD] = new DictionaryCollections( GRDExtractor::num_templates() );
         if (!groups[GRD]->load(in)) {

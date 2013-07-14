@@ -775,9 +775,13 @@ void Parser::train(void) {
         model->param.flush( train_dat.size() * (iter + 1) );
         evaluate();
 
-        ofstream fout((train_opt.model_name + "." + to_str(iter) + ".model").c_str(),
-                std::ofstream::binary);
+        string saved_model_file = (train_opt.model_name + "." + to_str(iter) + ".model");
+        ofstream fout(saved_model_file.c_str(), std::ofstream::binary);
         model->save(fout);
+
+        TRACE_LOG("Model for iteration [%d] is saved to [%s]",
+                iter + 1,
+                saved_model_file.c_str());
 
     }
 
@@ -913,7 +917,7 @@ void Parser::test() {
         }
 
         extract_features(inst);
-        calculate_score(inst, model->param);
+        calculate_score(inst, model->param, true);
 
         decoder->decode(inst);
 

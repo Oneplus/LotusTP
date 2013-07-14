@@ -8,20 +8,37 @@ namespace ltp {
 namespace parser {
 
 struct FeatureVector {
-    FeatureVector() : n(0), idx(0), val(0), offset(-1) {}
+    FeatureVector() : n(0), idx(0), val(0), loff(0) {}
     ~FeatureVector() {
+        // clear();
+    }
+
+    int n;
+    int * idx; 
+    double * val;
+    int loff;
+
+    /*
+     * clear the FeatureVector
+     */
+    void clear() {
         if (idx) {
             delete [](idx);
+            idx = 0;
         }
 
         if (val) {
-            delete [](idx);
+            delete [](val);
+            val = 0;
         }
     }
+};
 
-    int * idx;
-    double * val;
-    int n;
+struct FeatureVectorDB : public FeatureVector {
+    FeatureVectorDB() : offset(-1) {}
+    ~FeatureVectorDB() {
+    }
+
     long long offset;
 
     /*

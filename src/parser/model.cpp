@@ -230,7 +230,6 @@ bool Model::load(istream & in) {
 
     in.seekg(parameter_offset);
     if (!param.load(in)) {
-        std::cout << "param failed" << std::endl;
         return false;
     }
 

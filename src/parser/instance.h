@@ -19,45 +19,7 @@ public:
     }
 
     ~Instance() {
-        if (labeled_dependency_features.total_size() > 0) {
-            for (int i = 0; i < labeled_dependency_features.dim1(); ++ i) {
-                for (int j = 0; j < labeled_dependency_features.dim2(); ++ j) {
-                    for (int k = 0; k < labeled_dependency_features.dim3();++ k) {
-                        delete labeled_dependency_features[i][j][k];
-                    }
-                }
-            }
-        }
-
-        if (dependency_features.total_size() > 0) {
-            for (int i = 0; i < dependency_features.nrows(); ++ i) {
-                for (int j = 0; j < dependency_features.ncols(); ++ j) {
-                    delete dependency_features[i][j];
-                }
-            }
-        }
-
-        if (labeled_sibling_features.total_size() > 0) {
-            for (int i = 0; i < labeled_sibling_features.dim1(); ++ i) {
-                for (int j = 0; j < labeled_sibling_features.dim2(); ++ j) {
-                    for (int k = 0; k < labeled_sibling_features.dim3(); ++ k) {
-                        for (int m = 0; m < labeled_sibling_features.dim4(); ++ m) {
-                            delete labeled_sibling_features[i][j][k][m];
-                        }
-                    }
-                }
-            }
-        }
-
-        if (sibling_features.total_size() > 0) {
-            for (int i = 0; i < sibling_features.dim1(); ++ i) {
-                for (int j = 0; j < sibling_features.dim2(); ++ j) {
-                    for (int k = 0; k < sibling_features.dim3(); ++ k) {
-                        delete sibling_features[i][j][k];
-                    }
-                }
-            }
-        }
+        free_features();
     }
 
     /*
@@ -178,182 +140,22 @@ public:
         return -1;
     }
 
-    int dump_all_featurevec(std::ostream & ofs) {
-        int len;
-        FeatureVector ** fvs = 0;
-        if ((len = dependency_features.total_size()) > 0 && 
-                (fvs = dependency_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->write(ofs);
-                    fvs[i]->nice();
-                }
-            }
-        }
-
-        if ((len = labeled_dependency_features.total_size()) > 0 && 
-                (fvs = labeled_dependency_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->write(ofs);
-                    fvs[i]->nice(); 
-                }
-            }
-        }
-
-        if ((len = sibling_features.total_size()) > 0 &&
-                (fvs = sibling_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->write(ofs);
-                    fvs[i]->nice();
-                }
-            }
-        }
-
-        if ((len = labeled_sibling_features.total_size()) > 0 &&
-                (fvs = labeled_sibling_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->write(ofs);
-                    fvs[i]->nice();
-                }
-            }
-        }
-    }
-
-    int load_all_featurevec(std::istream & ifs) {
-        int len;
-        FeatureVector ** fvs = 0;
-        if ((len = dependency_features.total_size()) > 0 && 
-                (fvs = dependency_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->read(ifs);
-                }
-            }
-        }
-
-        if ((len = labeled_dependency_features.total_size()) > 0 && 
-                (fvs = labeled_dependency_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->read(ifs);
-                }
-            }
-        }
-
-        if ((len = sibling_features.total_size()) > 0 &&
-                (fvs = sibling_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->read(ifs);
-                }
-            }
-        }
-
-        if ((len = labeled_sibling_features.total_size()) > 0 &&
-                (fvs = labeled_sibling_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->read(ifs);
-                }
-            }
-        }
-    }
-
-    int nice_all_featurevec() {
-        int len;
-        FeatureVector ** fvs;
-        if ((len = dependency_features.total_size()) > 0 && 
-                (fvs = dependency_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->nice();
-                }
-            }
-        }
-
-        if ((len = labeled_dependency_features.total_size()) > 0 && 
-                (fvs = labeled_dependency_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->nice();
-                }
-            }
-        }
-
-        if ((len = sibling_features.total_size()) > 0 &&
-                (fvs = sibling_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->nice();
-                }
-            }
-        }
-
-        if ((len = labeled_sibling_features.total_size()) > 0 &&
-                (fvs = labeled_sibling_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->nice();
-                }
-            }
-        }
-    }
-
     int cleanup() {
-        int len;
-        FeatureVector ** fvs;
-        if ((len = dependency_features.total_size()) > 0 && 
-                (fvs = dependency_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->nice();
-                    delete fvs[i];
-                }
-            }
-        }
-
-        if ((len = labeled_dependency_features.total_size()) > 0 && 
-                (fvs = labeled_dependency_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->nice();
-                    delete fvs[i];
-                }
-            }
-        }
-
-        if ((len = sibling_features.total_size()) > 0 &&
-                (fvs = sibling_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->nice();
-                    delete fvs[i];
-                }
-            }
-        }
-
-        if ((len = labeled_sibling_features.total_size()) > 0 &&
-                (fvs = labeled_sibling_features.c_buf())) {
-            for (int i = 0; i < len; ++ i) {
-                if (fvs[i]) {
-                    fvs[i]->nice();
-                    delete fvs[i];
-                }
-            }
-        }
+        free_features();
         features.zero();
         predicted_features.zero();
-        dependency_features.dealloc();
-        dependency_scores.dealloc();
-        labeled_dependency_features.dealloc();
-        labeled_dependency_scores.dealloc();
-        sibling_features.dealloc();
-        sibling_scores.dealloc();
-        labeled_sibling_features.dealloc();
-        labeled_sibling_scores.dealloc();
+        depu_features.dealloc();
+        depu_scores.dealloc();
+        depl_features.dealloc();
+        depl_scores.dealloc();
+        sibu_features.dealloc();
+        sibu_scores.dealloc();
+        sibl_features.dealloc();
+        sibl_scores.dealloc();
+        grdu_features.dealloc();
+        grdu_scores.dealloc();
+        grdl_features.dealloc();
+        grdl_scores.dealloc();
     }
 public:
 
@@ -373,24 +175,134 @@ public:
     SparseVec               features;
 
     /* features group */
-    Vec<FeatureVector *>    postag_unigram_features;
-    Vec<double>             postag_unigram_scores;
+    Vec<FeatureVector *>    posu_features;
+    Vec<double>             posu_scores;
 
-    Mat<FeatureVector *>    dependency_features;
-    Mat<double>             dependency_scores;
+    Mat<FeatureVector *>    depu_features;
+    Mat<double>             depu_scores;
 
-    Mat3<FeatureVector *>   labeled_dependency_features;
-    Mat3<double>            labeled_dependency_scores;
+    Mat3<FeatureVector *>   depl_features;
+    Mat3<double>            depl_scores;
 
-    Mat3<FeatureVector *>   sibling_features;
-    Mat3<double>            sibling_scores;
+    Mat3<FeatureVector *>   sibu_features;
+    Mat3<double>            sibu_scores;
 
-    Mat4<FeatureVector *>   labeled_sibling_features;
-    Mat4<double>            labeled_sibling_scores;
+    Mat4<FeatureVector *>   sibl_features;
+    Mat4<double>            sibl_scores;
+
+    Mat3<FeatureVector *>   grdu_features;
+    Mat3<double>            grdu_scores;
+
+    Mat4<FeatureVector *>   grdl_features;
+    Mat4<double>            grdl_scores;
 
     std::vector<int>             verb_cnt;
     std::vector<int>             conj_cnt;
     std::vector<int>             punc_cnt;
+
+private:
+    void free_features() {
+        int len;
+        FeatureVector ** fvs;
+        if ((len = depu_features.total_size()) > 0 && 
+                (fvs = depu_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->clear();
+                    delete fvs[i];
+                }
+            }
+        }
+
+        // in labeled case, different labels share memory, index should
+        // be avoid double delete
+        if ((len = depl_features.total_size()) > 0 && 
+                (fvs = depl_features.c_buf())) {
+            int d1 = depl_features.dim1();
+            int d2 = depl_features.dim2();
+            int d3 = depl_features.dim3();
+
+            for (int i = 0; i < d1; ++ i) {
+                for (int j = 0; j < d2; ++ j) {
+                    if (depl_features[i][j][0]) {
+                        depl_features[i][j][0]->clear();
+                    }
+                    for (int l = 0; l < d3; ++ l) {
+                        if (depl_features[i][j][l]) {
+                            delete depl_features[i][j][l];
+                        }
+                    }
+                }
+            }
+        }
+
+        if ((len = sibu_features.total_size()) > 0 &&
+                (fvs = sibu_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->clear();
+                    delete fvs[i];
+                }
+            }
+        }
+
+        if ((len = sibl_features.total_size()) > 0 &&
+                (fvs = sibl_features.c_buf())) {
+            int d1 = sibl_features.dim1();
+            int d2 = sibl_features.dim2();
+            int d3 = sibl_features.dim3();
+            int d4 = sibl_features.dim4();
+
+            for (int i = 0; i < d1; ++ i) {
+                for (int j = 0; j < d2; ++ j) {
+                    for (int k = 0; k < d3; ++ k) {
+                        if (sibl_features[i][j][k][0]) {
+                            sibl_features[i][j][k][0]->clear();
+                        }
+                        for (int l = 0; l < d4; ++ l) {
+                            if (sibl_features[i][j][k][l]) {
+                                delete sibl_features[i][j][k][l];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+ 
+        if ((len = grdu_features.total_size()) > 0 &&
+                (fvs = grdu_features.c_buf())) {
+            for (int i = 0; i < len; ++ i) {
+                if (fvs[i]) {
+                    fvs[i]->clear();
+                    delete fvs[i];
+                }
+            }
+        }
+
+        if ((len = grdl_features.total_size()) > 0 &&
+                (fvs = grdl_features.c_buf())) {
+            int d1 = grdl_features.dim1();
+            int d2 = grdl_features.dim2();
+            int d3 = grdl_features.dim3();
+            int d4 = grdl_features.dim4();
+
+            for (int i = 0; i < d1; ++ i) {
+                for (int j = 0; j < d2; ++ j) {
+                    for (int k = 0; k < d3; ++ k) {
+                        if (grdl_features[i][j][k][0]) {
+                            grdl_features[i][j][k][0]->clear();
+                        }
+                        for (int l = 0; l < d4; ++ l) {
+                            if (grdl_features[i][j][k][l]) {
+                                delete grdl_features[i][j][k][l];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
 };  // end for class Instance
 }   // end for namespace parser
 }   // end for namespace ltp
