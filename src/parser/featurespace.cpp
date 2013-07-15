@@ -42,7 +42,6 @@ int FeatureSpace::build_feature_space(int num_deprels, const std::vector<Instanc
                 int hid = itx.hid();
                 int cid = itx.cid();
 
-                //std::vector< std::list<std::string> > cache;
                 std::vector< StringVec > cache;
                 cache.resize( N );
 
@@ -93,7 +92,7 @@ int FeatureSpace::build_feature_space(int num_deprels, const std::vector<Instanc
                     }
                 }
             }
-        }
+        }   //  end for feat_opt.use_grand
 
         if ((i+1) % model_opt.display_interval== 0) {
             TRACE_LOG("In building feature space, [%d] instances scanned.", i+1);

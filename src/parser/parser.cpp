@@ -162,13 +162,6 @@ bool Parser::parse_cfg(utility::ConfigParser & cfg) {
             feat_opt.use_dependency_between = (intbuf == 1);
         }
 
-        // detrieve dependency type from configuration
-        feat_opt.use_unlabeled_dependency = (model_opt.labeled == false &&
-                feat_opt.use_dependency);
-
-        feat_opt.use_labeled_dependency = (model_opt.labeled == true &&
-                feat_opt.use_dependency);
-
         if (cfg.get_integer("feature", "use-sibling", intbuf)) {
             feat_opt.use_sibling = (intbuf == 1);
         }
@@ -180,13 +173,6 @@ bool Parser::parse_cfg(utility::ConfigParser & cfg) {
         if (cfg.get_integer("feature", "use-sibling-linear", intbuf)) {
             feat_opt.use_sibling_linear = (intbuf == 1);
         }
-
-        // detrieve sibling type from configuration
-        feat_opt.use_unlabeled_sibling = (model_opt.labeled == false &&
-                feat_opt.use_sibling);
-
-        feat_opt.use_labeled_sibling = (model_opt.labeled == true &&
-                feat_opt.use_sibling);
 
         if (cfg.get_integer("feature", "use-grand", intbuf)) {
             feat_opt.use_grand = (intbuf == 1);
@@ -200,12 +186,50 @@ bool Parser::parse_cfg(utility::ConfigParser & cfg) {
             feat_opt.use_grand_linear = (intbuf == 1);
         }
 
-        feat_opt.use_unlabeled_grand = (model_opt.labeled == false &&
-                feat_opt.use_grand);
-
-        feat_opt.use_labeled_grand = (model_opt.labeled == true &&
-                feat_opt.use_grand);
     }
+
+    if (model_opt.decoder_name == "1o") {
+        if (feat_opt.use_sibling) {
+            WARNING_LOG("Sibling features should not be configed "
+                    "with 1st-order decoder.");
+            TRACE_LOG("Sibling features is inactived.");
+            feat_opt.use_sibling = false;
+        }
+
+        if (feat_opt.use_grand) {
+            WARNING_LOG("Grandchild features should not be configed "
+                    "with 1st-order decoder.");
+            TRACE_LOG("Grandchild features is inactived.");
+            feat_opt.use_grand = false;
+        }
+    } else if (model_opt.decoder_name == "2o-sib") {
+        if (feat_opt.use_grand) {
+            WARNING_LOG("Grandchild features should not be configed "
+                    "with 2nd-order-sibling decoder.");
+            TRACE_LOG("Grandchild features is inactived.");
+            feat_opt.use_grand = false;
+        }
+    }
+
+    // detrieve dependency type from configuration
+    feat_opt.use_unlabeled_dependency = (model_opt.labeled == false &&
+            feat_opt.use_dependency);
+
+    feat_opt.use_labeled_dependency = (model_opt.labeled == true &&
+            feat_opt.use_dependency);
+
+    // detrieve sibling type from configuration
+    feat_opt.use_unlabeled_sibling = (model_opt.labeled == false &&
+            feat_opt.use_sibling);
+
+    feat_opt.use_labeled_sibling = (model_opt.labeled == true &&
+            feat_opt.use_sibling);
+
+    feat_opt.use_unlabeled_grand = (model_opt.labeled == false &&
+            feat_opt.use_grand);
+
+    feat_opt.use_labeled_grand = (model_opt.labeled == true &&
+            feat_opt.use_grand);
 }
 
 void Parser::build_configuration(void) {
@@ -397,12 +421,14 @@ void Parser::build_decoder(void) {
         } else {
             decoder = new Decoder1O(model->num_deprels());
         }
+
     } else if (model_opt.decoder_name == "2o-sib") {
         if (!model_opt.labeled) {
             decoder = new Decoder2O();
         } else {
             decoder = new Decoder2O(model->num_deprels());
         }
+
     } else if (model_opt.decoder_name == "2o-carreras") {
         if (!model_opt.labeled) {
             decoder = new Decoder2OCarreras();
@@ -1061,7 +1087,7 @@ void Parser::calculate_score(Instance * inst, const Parameters& param, bool use_
                 inst->grdl_scores[hid][cid][gid][l] = param.dot(fv, use_avg);
             }
         }
-    }
+    }   //  end for use_labeled_grand
 }
 
 }   //  end for namespace parser
