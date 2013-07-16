@@ -2,6 +2,7 @@
 #define __SPARSE_VECTOR_H__
 
 #include "featurevec.h"
+#include <iostream>
 
 #ifdef _WIN32
 #include <hash_map>
@@ -55,6 +56,12 @@ public:
             norm += (val * val);
         }
         return norm;
+    }
+
+    inline void add(int idx,
+            double scale) {
+        if (_vec.find(idx) == _vec.end()) _vec[idx] = 0.;
+        _vec[idx] += scale;
     }
 
     inline void add(const SparseVec &other,
@@ -118,7 +125,7 @@ public:
         _vec.clear();
     }
 
-    inline void str(ostream & out, string prefix = "  ") const {
+    inline void str(std::ostream & out, std::string prefix = "  ") const {
         int i = 0;
         out << "{ ";
         for (const_iterator itx = _vec.begin();
@@ -131,7 +138,7 @@ public:
                 out << "\n" << prefix;
             }
         }
-        out << "}" << endl;
+        out << "}" << std::endl;
     }
 private:
     internal_sparsevec_t _vec;

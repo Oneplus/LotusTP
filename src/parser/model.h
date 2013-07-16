@@ -56,8 +56,8 @@ public:
     FeatureSpace            space;
     Parameters              param;
 
-    LabelCollections        postags;
-    LabelCollections        deprels;
+    IndexableSmartMap       postags;
+    IndexableSmartMap       deprels;
 
     /*
      * save the model to the output stream.

@@ -61,6 +61,8 @@ inline int decode(const std::string & s,
     } else {
         return 0;
     }
+
+    return len;
 }
 
 }       //  end for namespace codecs

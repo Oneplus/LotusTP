@@ -51,7 +51,7 @@ template <class T = int,
 class SmartMap {
 
 public:
-    SmartMap() :
+    explicit SmartMap() :
         _num_entries(0),
         _cap_entries(INIT_CAP_ENTRIES),
         _num_buckets(0),
@@ -513,7 +513,7 @@ protected:
      *                          is added when the hash entry is found
      *  @return     int         the position of the hash node in hsh buffer
      */
-    inline int _find(const char * key, int hv, int idx, bool add_freq) {
+    int _find(const char * key, unsigned hv, unsigned idx, bool add_freq) {
         int p = _hash_buckets[idx];
 
         while (p >= 0) {
@@ -535,7 +535,6 @@ protected:
 
         return -1;
     }
-
 };
 
 template <class T, class HashFunction, class StringEqual>
@@ -546,6 +545,128 @@ const unsigned int SmartMap<T, HashFunction, StringEqual>::PRIMES[100] = {
     1572869,    3145739,    6291469,    12582917,   25165843,
     50331653,   100663319,  201326611,  402653189,  805306457,
     1610612741,
+};
+
+class IndexableSmartMap : public SmartMap<int> {
+public:
+    IndexableSmartMap() : entries(0), cap_entries(0) {}
+
+    ~IndexableSmartMap() {
+        if (entries) {
+            delete [](entries);
+        }
+    }
+
+private:
+    int cap_entries;
+    int * entries;
+
+public:
+    /*
+     * push a key to the labelcollections
+     *
+     *  @param[in]  key     the key
+     *  @return     int     the index of the key
+     */
+    // offsets of the key in hashmap key buffer is stored in entries.
+    // when a new key is insert into the collection, check if entries
+    // buffer is big enough. if not, duplicate the memory.
+    int push(const char * key) {
+        if (!SmartMap<int>::contains(key)) {
+            int idx = SmartMap<int>::size();
+            set(key, idx);
+
+            if (cap_entries < SmartMap<int>::_num_entries) {
+                cap_entries = ( SmartMap<int>::_num_entries << 1);
+                int * new_entries = new int[cap_entries];
+                if ( entries ) {
+                    memcpy(new_entries, entries, sizeof(int) * (SmartMap<int>::_num_entries - 1));
+                    delete [](entries);
+                }
+                entries = new_entries;
+            }
+
+            // SmartMap<int>::debug(cout);
+            entries[_num_entries-1] = SmartMap<int>::_latest_hash_node->__key_off;
+            return idx;
+        } else {
+            return (*SmartMap<int>::get(key));
+        }
+
+        return -1;
+    }
+
+    int push(const std::string & key) {
+        return push(key.c_str());
+    }
+
+    /*
+     * get the key whose index is i
+     *
+     *  @param[in]  i               the index
+     *  @return     const char *    pointer to the key
+     */
+    const char * at(int i) {
+        if (i >= 0 && i < _num_entries) {
+            return SmartMap<int>::_key_buffer + entries[i];
+        } else {
+            return 0;
+        }
+    }
+
+    /*
+     * get the index of the key. if the key doesn't exist, return -1
+     *
+     *  @param[in]  key             the key
+     *  @return     int             index of the key if exist, otherwise -1
+     */
+    int index( const char * key ) {
+        int val = -1;
+        if (SmartMap<int>::get(key, val)) {
+            return val;
+        }
+
+        return -1;
+    }
+
+    int index( const std::string & key) {
+        return index(key.c_str());
+    }
+
+    /*
+     * dump the collection to output stream
+     *
+     *  @param[out] out     the output stream
+     */
+    void dump(std::ostream & out) {
+        SmartMap<int>::dump(out);
+        out.write(reinterpret_cast<const char *>(entries), sizeof(int) * _num_entries);
+    }
+
+    /*
+     * load the collections from input stream.
+     *
+     *  @param[in]  in      the input stream.
+     *  @return     bool    true on success, otherwise false
+     */
+    bool load(std::istream & in) {
+        bool ret = SmartMap<int>::load(in);
+        if (!ret) {
+            return ret;
+        }
+
+        if (entries) {
+            delete [](entries);
+        }
+
+        entries = new int[SmartMap<int>::_num_entries];
+        if (!entries) {
+            return false;
+        }
+
+        in.read(reinterpret_cast<char *>(entries), sizeof(int) * _num_entries);
+        return true;
+    }
 };
 
 }       //  end for namespace strutils
