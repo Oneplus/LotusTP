@@ -1,5 +1,6 @@
 #include "segmentor.h"
 
+#include "time.hpp"
 #include "logging.hpp"
 #include "instance.h"
 #include "extractor.h"
@@ -39,7 +40,7 @@ bool Segmentor::parse_cfg(ltp::utility::ConfigParser & cfg) {
     train_opt.algorithm     = "pa";
     train_opt.model_name    = "";
     train_opt.max_iter      = 10;
-    train_opt.display_interval = 1000;
+    train_opt.display_interval = 5000;
 
     if (cfg.has_section("train")) {
         TRACE_LOG("Training mode specified.");
@@ -234,7 +235,7 @@ void Segmentor::build_feature_space(void) {
     for (int i = 0; i < train_dat.size(); ++ i) {
         extract_features(train_dat[i], true);
         if ((i + 1) % train_opt.display_interval == 0) {
-            TRACE_LOG("Process [%d] instances.", (i+1));
+            TRACE_LOG("[%d] instances is extracted.", (i+1));
         }
     }
 }
@@ -292,10 +293,13 @@ void Segmentor::train(void) {
 
     model = new Model;
     // build tag dictionary, map string tag to index
+    TRACE_LOG("Start build configuration");
     build_configuration();
+    TRACE_LOG("Build configuration is done.");
     TRACE_LOG("Number of labels: [%d]", model->labels.size());
 
     // build feature space from the training instance
+    TRACE_LOG("Start building feature space.");
     build_feature_space();
     TRACE_LOG("Building feature space is done.");
     TRACE_LOG("Number of features: [%d]", model->space.num_features());
@@ -369,10 +373,22 @@ void Segmentor::train(void) {
                             iter * train_dat.size() + i + 1,
                             1.);
                 }
+
+                if ((i+1) % train_opt.display_interval == 0) {
+                    TRACE_LOG("[%d] instances is trained.", i+1);
+                }
             }
 
             model->param.flush( train_dat.size() * (iter + 1) );
             evaluate();
+
+            std::string saved_model_file = (train_opt.model_name + "." + strutils::to_str(iter) + ".model");
+            std::ofstream ofs(saved_model_file.c_str(), std::ofstream::binary);
+            model->save(ofs);
+
+            TRACE_LOG("Model for iteration [%d] is saved to [%s]",
+                    iter + 1,
+                    saved_model_file.c_str());
         }
     }
 
@@ -431,6 +447,79 @@ void Segmentor::evaluate(void) {
 }
 
 void Segmentor::test(void) {
+    const char * model_file = test_opt.model_file.c_str();
+    ifstream mfs(model_file, std::ifstream::binary);
+
+    if (!mfs) {
+        ERROR_LOG("Failed to load model");
+        return;
+    }
+
+    model = new Model;
+    if (!model->load(mfs)) {
+        ERROR_LOG("Failed to load model");
+        return;
+    }
+
+    TRACE_LOG("Number of labels                 [%d]", model->num_labels());
+    TRACE_LOG("Number of features               [%d]", model->space.num_features());
+    TRACE_LOG("Number of dimension              [%d]", model->space.dim());
+
+    const char * test_file = test_opt.test_file.c_str();
+
+    ifstream ifs(test_file);
+
+    if (!ifs) {
+        ERROR_LOG("Failed to open holdout file.");
+        return;
+    }
+
+    decoder = new Decoder(model->num_labels());
+    SegmentReader reader(ifs);
+    Instance * inst = NULL;
+
+    int num_recalled_words = 0;
+    int num_predicted_words = 0;
+    int num_gold_words = 0;
+
+    int beg_tag0 = model->labels.index( __b__ );
+    int beg_tag1 = model->labels.index( __s__ );
+
+    double before = get_time();
+
+    while ((inst = reader.next())) {
+        int len = inst->size();
+        inst->tagsidx.resize(len);
+        for (int i = 0; i < len; ++ i) {
+            inst->tagsidx[i] = model->labels.index(inst->tags[i]);
+        }
+
+        extract_features(inst);
+        calculate_scores(inst, true);
+        decoder->decode(inst);
+
+        build_words(inst, inst->tagsidx, inst->words, beg_tag0, beg_tag1);
+        build_words(inst, inst->predicted_tagsidx, inst->predicted_words, beg_tag0, beg_tag1);
+
+        num_recalled_words += inst->num_recalled_words();
+        num_predicted_words += inst->num_predicted_words();
+        num_gold_words += inst->num_gold_words();
+
+        delete inst;
+    }
+
+    double after = get_time();
+
+    double p = (double)num_recalled_words / num_predicted_words;
+    double r = (double)num_recalled_words / num_gold_words;
+    double f = 2 * p * r / (p + r);
+
+    TRACE_LOG("P: %lf ( %d / %d )", p, num_recalled_words, num_predicted_words);
+    TRACE_LOG("R: %lf ( %d / %d )", r, num_recalled_words, num_gold_words);
+    TRACE_LOG("F: %lf" , f);
+    TRACE_LOG("Eclipse time %lf", after - before);
+
+    sleep(1000000);
     return;
 }
 

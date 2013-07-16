@@ -20,7 +20,20 @@ public:
     int num_features();
     int dim();
     void set_num_labels(int num_labeles);
+
+    /*
+     * dump the feature space to a output stream
+     *
+     *  @param[in]  ofs     the output stream
+     */
     void dump(std::ostream & ofs);
+
+    /*
+     * load the feature space from a input stream
+     *
+     *  @param[in]  num_labels  the number of labels
+     *  @param[in]  ifs         the input stream
+     */
     bool load(int num_labeles, std::istream & ifs);
 private:
     int _offset;
