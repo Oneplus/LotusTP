@@ -26,6 +26,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 namespace ltp { //LTP_NAMESPACE_BEGIN
 namespace strutils { //LTP_STRING_NAMESPACE_BEGIN
@@ -202,6 +203,45 @@ inline std::vector<std::string> split_by_sep(std::string str, std::string sep = 
  *  @return             std::vector<std::string> the words
  */
 inline std::vector<std::string> rsplit(std::string str, int maxsplit = -1) {
+    std::vector<std::string> ret;
+
+    int numsplit = 0;
+    int len = str.size();
+
+    while (str.size() > 0) {
+        size_t pos = std::string::npos;
+
+        for (pos = 0; pos < str.size() && (str[pos] != ' '
+                    && str[pos] != '\t'
+                    && str[pos] != '\r'
+                    && str[pos] != '\n'); ++ pos);
+
+        if (pos == str.size()) {
+            pos = std::string::npos;
+        }
+
+        if (maxsplit >= 0 && numsplit < maxsplit) {
+            ret.push_back(str.substr(0, pos));
+            ++ numsplit;
+        } else if (maxsplit >= 0 && numsplit == maxsplit) {
+            ret.push_back(str);
+            ++ numsplit;
+        } else if (maxsplit == -1) {
+            ret.push_back(str.substr(0, pos));
+            ++ numsplit;
+        }
+
+        if (pos == std::string::npos) {
+            str = "";
+        } else {
+            for (; pos < str.size() && (str[pos] == ' '
+                        || str[pos] == '\t'
+                        || str[pos] == '\n'
+                        || str[pos] == '\r'); ++ pos);
+            str = str.substr(pos);
+        }
+    }
+    return ret;
 }
 
 /*
@@ -215,6 +255,61 @@ inline std::vector<std::string> rsplit(std::string str, int maxsplit = -1) {
  */
 
 inline std::vector<std::string> rsplit_by_sep(std::string str, std::string sep = "", int maxsplit = -1) {
+    std::vector<std::string> ret;
+
+    int numsplit = 0;
+    int len      = str.size();
+    int sep_flag = (sep != "");
+
+    while (str.size() > 0) {
+        size_t pos = std::string::npos;
+
+        if (sep_flag) {
+            pos = str.rfind(sep);
+        } else {
+            for (pos = str.size() - 1; pos >= 0; -- pos) {
+                if (str[pos] == ' '
+                        || str[pos] == '\t'
+                        || str[pos] == '\r'
+                        || str[pos] == '\n') {
+                    break;
+                }
+            }
+            if (pos == -1) {
+                pos = 0;
+                // pos = std::string::npos;
+            }
+        }
+
+        if (maxsplit >= 0 && numsplit < maxsplit) {
+            ret.push_back(str.substr(pos + sep.length(), std::string::npos));
+            ++ numsplit;
+        } else if (maxsplit >= 0 && numsplit == maxsplit) {
+            ret.push_back(str);
+            pos = 0;
+            ++ numsplit;
+        } else if (maxsplit == -1) {
+            ret.push_back(str.substr(pos, std::string::npos));
+            ++ numsplit;
+        }
+
+        if (pos == 0) {
+            str = "";
+        } else {
+            if (sep_flag) {
+                // pos = pos - sep.size();
+            } else {
+                for (; pos >= 0 && (str[pos] == ' '
+                            || str[pos] == '\t'
+                            || str[pos] == '\n'
+                            || str[pos] == '\r'); -- pos);
+            }
+            str = str.substr(0, pos);
+        }
+    }
+
+    std::reverse(ret.begin(), ret.end());
+    return ret;
 }
 
 /*
