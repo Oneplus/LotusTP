@@ -255,8 +255,8 @@ void Postagger::collect_features(Instance * inst, const std::vector<int> & tagsi
         vec.add(fv->idx, fv->val, fv->n, fv->loff, 1.);
 
         if (i > 0) {
-            int prev_lid = tagsidx[i-1];
-            int idx = model->space.index(prev_lid, l);
+            int pl = tagsidx[i-1];
+            int idx = model->space.index(pl, l);
             vec.add(idx, 1.);
         }
     }
@@ -397,7 +397,7 @@ void Postagger::evaluate(void) {
             inst->tagsidx[i] = model->labels.index(inst->tags[i]);
         }
 
-        extract_features(inst);
+        extract_features(inst, false);
         calculate_scores(inst, true);
         decoder->decode(inst);
 

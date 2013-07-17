@@ -53,6 +53,8 @@ public:
     math::Mat< FeatureVector *> uni_features;
     math::Mat< double > uni_scores;
     math::Mat< double > bi_scores;
+
+    std::vector< std::vector< std::string> > chars;
 };
 
 }       //  end for namespace postagger

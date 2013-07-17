@@ -62,9 +62,11 @@ void Decoder::get_result(Instance * inst) {
 }
 
 void Decoder::free_lattice() {
-    for (int i = 0; i < lattice.nrows(); ++ i) {
-        for (int j = 0; j < lattice.ncols(); ++ j) {
-            if (lattice[i][j]) delete lattice[i][j];
+    int len = lattice.total_size();
+    const LatticeItem ** p = lattice.c_buf();
+    for (int i = 0; i < len; ++ i) {
+        if (p[i]) {
+            delete p[i];
         }
     }
 }
