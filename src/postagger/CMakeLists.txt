@@ -9,7 +9,7 @@ set (postagger_SRC
     featurespace.cpp
     model.cpp
     extractor.cpp
-    postagger.cpp
-    otpos.cpp)
+    postagger.cpp)
 
-add_executable (otpos ${postagger_SRC})
+add_executable (otpos otpos.cpp ${postagger_SRC})
+add_library (postagger postag_dll.cpp ${postagger_SRC})
