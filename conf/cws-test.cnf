@@ -1,0 +1,3 @@
+[test]
+test-file = data/ctb5-test.seg
+model-file = model/ctb5-seg.4.model

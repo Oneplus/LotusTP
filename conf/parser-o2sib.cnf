@@ -1,6 +1,6 @@
 [model]
 labeled = 1
-decoder-name = 1o
+decoder-name = 2o-sib
 
 [feature]
 use-postag-unigram = 0
@@ -9,11 +9,14 @@ use-dependency-unigram = 1
 use-dependency-bigram = 1
 use-dependency-surrounding = 1
 use-dependency-between = 1
+use-sibling = 1
+use-sibling-basic = 1
+use-sibling-linear = 1
 
 [train]
-train-file = data/train.conll
-holdout-file = data/holdout.conll
+train-file = data/conll/ldc-train.conll
+holdout-file = data/conll/ldc-holdout.conll
 
 max-iter = 5 
 algorithm = pa
-model-name = lgdpj
+model-name = model/parser/ldc-o2sib

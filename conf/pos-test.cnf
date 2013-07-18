@@ -1,0 +1,3 @@
+[test]
+test-file = data/ctb5-test.pos
+model-file = model/ctb5-pos.3.model

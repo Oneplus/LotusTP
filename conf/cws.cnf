@@ -1,0 +1,6 @@
+[train]
+train-file = data/ctb5-train.seg
+holdout-file = data/ctb5-holdout.seg
+algorithm = pa 
+model-name = model/ctb5-seg
+max-iter = 5

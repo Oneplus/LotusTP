@@ -1,0 +1,6 @@
+[train]
+train-file = data/ctb5-train.pos
+holdout-file = data/ctb5-holdout.pos
+algorithm = pa
+model-name = model/ctb5-pos
+max-iter = 5

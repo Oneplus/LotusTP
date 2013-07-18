@@ -1,0 +1,3 @@
+[test]
+test-file = data/conll/ldc-test.conll
+model-file = model/parser/ldc-o2sib.4.model
