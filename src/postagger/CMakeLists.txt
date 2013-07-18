@@ -1,7 +1,7 @@
 include_directories (./
     ${SOURCE_DIR}/postagger
     ${SOURCE_DIR}/utils
-    ${SOURCE_DIR}/math)
+    ${SOURCE_DIR}/utils/math)
 
 set (postagger_SRC
     options.cpp

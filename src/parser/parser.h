@@ -29,13 +29,11 @@ private:
     bool            __TEST__;
 
 public:
-    Parser( ConfigParser& cfg ) {
-        parse_cfg(cfg);
-        // display_opt();
-    }
+    Parser();
 
-    ~Parser() {
-    }
+    Parser( ConfigParser& cfg );
+
+    ~Parser();
 
     bool operator! () const {
         return _valid;
@@ -55,22 +53,31 @@ public:
 
 private:
     bool _valid; /* indicating if the parser is valid */
-    Model * model;
     vector<Instance *> train_dat;
-    vector<Instance *> holdout_dat;
-    vector<Extractor *> extractors;
+
+protected:
+    Model * model;
     Decoder * decoder;
 private:
+    void init_opt();
+
     bool parse_cfg(ConfigParser& cfg);
-    void display_opt();
 
     bool read_instances(const char * filename, vector<Instance *>& dat);
-
-    void build_decoder(void);
 
     void build_feature_space(void);
 
     void build_configuration(void);
+
+    void extract_features(vector<Instance *>& dat);
+
+    void build_gold_features(void);
+
+    void train(void);
+
+    void evaluate(void);
+
+    void test(void);
 
     void collect_unlabeled_features_of_one_instance(Instance * inst,
             const vector<int> & heads,
@@ -84,17 +91,10 @@ private:
     void collect_features_of_one_instance(Instance * inst, 
             bool gold = false);
 
+protected:
+    void build_decoder(void);
+
     void extract_features(Instance * inst);
-
-    void extract_features(vector<Instance *>& dat);
-
-    void build_gold_features(void);
-
-    void train(void);
-
-    void evaluate(void);
-
-    void test(void);
 
     void calculate_score(Instance * inst, const Parameters& param, bool use_avg = false);
 

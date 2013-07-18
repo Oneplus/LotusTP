@@ -175,8 +175,8 @@ public:
     SparseVec               features;
 
     /* features group */
-    Vec<FeatureVector *>    posu_features;
-    Vec<double>             posu_scores;
+    //Vec<FeatureVector *>    posu_features;
+    //Vec<double>             posu_scores;
 
     Mat<FeatureVector *>    depu_features;
     Mat<double>             depu_scores;

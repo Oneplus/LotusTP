@@ -20,8 +20,20 @@ Segmentor::Segmentor() :
    decoder(0) {
 }
 
-Segmentor::Segmentor(ltp::utility::ConfigParser & cfg) {
+Segmentor::Segmentor(ltp::utility::ConfigParser & cfg) :
+    model(0),
+    decoder(0) {
     parse_cfg(cfg);
+}
+
+Segmentor::~Segmentor() {
+    if (model) {
+        delete model;
+    }
+
+    if (decoder) {
+        delete decoder;
+    }
 }
 
 void Segmentor::run(void) {

@@ -57,6 +57,11 @@ public:
         _num_buckets(0),
         _cap_buckets_idx(0),
         _len_key_buffer(0),
+        _hash_buckets(0),
+        _hash_buffer(0),
+        _key_buffer(0),
+        _val_buffer(0),
+        _hash_buckets_volumn(0),
         _cap_key_buffer(INIT_CAP_KEY_BUFFER) {
 
         _cap_buckets    = PRIMES[_cap_buckets_idx];
@@ -275,6 +280,10 @@ public:
             delete [](_val_buffer);
             _val_buffer = 0;
         }
+
+        if (_hash_buckets_volumn) {
+           delete _hash_buckets_volumn;
+        }
     }
 
     /*
@@ -335,6 +344,7 @@ public:
         _hash_buffer    = new hash_node_t[_num_entries];
         _key_buffer     = new char[_len_key_buffer];
         _val_buffer     = new T[_num_entries];
+
 
         in.read(reinterpret_cast<char *>(_hash_buckets),    sizeof(int) * _cap_buckets);
         in.read(reinterpret_cast<char *>(_hash_buffer),     sizeof(hash_node_t) * _num_entries);

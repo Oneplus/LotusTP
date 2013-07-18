@@ -21,6 +21,16 @@ Postagger::Postagger(ltp::utility::ConfigParser & cfg) {
     parse_cfg(cfg);
 }
 
+Postagger::~Postagger() {
+    if (model) {
+        delete model;
+    }
+
+    if (decoder) {
+        delete decoder;
+    }
+}
+
 void Postagger::run(void) {
     if (__TRAIN__) {
         train();
