@@ -13,3 +13,9 @@ set (segment_SRC
     otcws.cpp)
 
 add_executable (otcws ${segment_SRC})
+
+set (segment_dll_SRC
+    segment_dll.cpp
+    ${segment_SRC})
+
+add_library (segmentor ${segment_dll_SRC})
