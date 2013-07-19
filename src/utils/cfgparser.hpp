@@ -60,6 +60,9 @@ public:
             std::string section_name("__&_global_X__");
             internal_entries_t * section = NULL;
 
+            sec[section_name] = internal_entries_t();
+            section = &sec[section_name];
+
             _num_entries = 0;
             _valid = true;
 
