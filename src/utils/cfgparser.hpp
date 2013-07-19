@@ -142,7 +142,7 @@ public:
         string strval;
         int ret = get(section, name, strval);
         if (!ret) {
-            return ret;
+            return false;
         }
         if (is_int(strval)) {
             intval = to_int(strval);
@@ -158,7 +158,7 @@ public:
         string strval;
         int ret = get(section, name, strval);
         if (!ret) {
-            return ret;
+            return false;
         }
         if (is_double(strval)) {
             dblval = to_double(strval);

@@ -75,7 +75,7 @@ public:
         _hash_buckets_volumn = new int[ _cap_buckets ];
 
         // set the hash_table to be empty
-        for (int i = 0; i < _cap_buckets; ++ i) {
+        for (unsigned i = 0; i < _cap_buckets; ++ i) {
             _hash_buckets[i] = -1;
             _hash_buckets_volumn[i] = 0;
         }
@@ -151,12 +151,12 @@ public:
             // allocate a new bucket
             int * new_hash_buckets_volumn = new int[_cap_buckets];
             int * new_hash_buckets = new int[_cap_buckets];
-            for (int i = 0; i < _cap_buckets; ++ i) {
+            for (unsigned i = 0; i < _cap_buckets; ++ i) {
                 new_hash_buckets[i] = -1;
                 new_hash_buckets_volumn[i] = 0;
             }
 
-            for (int i = 0; i < _num_entries; ++ i) {
+            for (unsigned i = 0; i < _num_entries; ++ i) {
                 unsigned int hash_val = _hash_buffer[i].__hash_val;
                 unsigned int bucket_id = (hash_val % _cap_buckets);
                 int freq = _hash_buffer[i].__freq;
