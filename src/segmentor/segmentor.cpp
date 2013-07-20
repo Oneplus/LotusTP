@@ -49,6 +49,12 @@ void Segmentor::run(void) {
     if (__TEST__) {
         test();
     }
+
+    for (int i = 0; i < train_dat.size(); ++ i) {
+        if (train_dat[i]) {
+            delete train_dat[i];
+        }
+    }
 }
 
 bool Segmentor::parse_cfg(ltp::utility::ConfigParser & cfg) {
@@ -126,7 +132,7 @@ bool Segmentor::parse_cfg(ltp::utility::ConfigParser & cfg) {
         }
     }
 
-	return true;
+    return true;
 }
 
 bool Segmentor::read_instance(const char * train_file) {
@@ -415,8 +421,6 @@ void Segmentor::train(void) {
                     saved_model_file.c_str());
         }
     }
-
-    delete model;
 }
 
 void Segmentor::evaluate(void) {
