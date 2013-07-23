@@ -25,4 +25,7 @@ set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g")
 # add_subdirectory (thirdparty)
 
 # compile source
+set (TOOLS_DIR ${PROJECT_SOURCE_DIR}/tools)
+
+add_subdirectory (thirdparty)
 add_subdirectory (src)
