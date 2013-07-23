@@ -13,12 +13,21 @@ int main(int argc, char * argv[]) {
         return -1;
     }
     std::vector<std::string> words;
-    int len = segmentor_segment(engine, 
-            "爱上一匹野马，可我的家里没有草原。", words);
-    for (int i = 0; i < len; ++ i) {
-        std::cout << words[i] << "|";
+
+    const char * suite[2] = {
+        "What's wrong with you? 别灰心! http://t.cn/zQz0Rn",
+        "台北真的是天子骄子吗？",};
+
+    for (int i = 0; i < 2; ++ i) {
+        words.clear();
+        int len = segmentor_segment(engine, suite[i], words);
+        for (int i = 0; i < len; ++ i) {
+            std::cout << words[i];
+            if (i+1 == len) std::cout <<std::endl;
+            else std::cout<< "|";
+        }
     }
-    std::cout << std::endl;
     segmentor_release_segmentor(engine);
     return 0;
 }
+

@@ -1,7 +1,10 @@
 all: cws pos par
 
 cws: cws.cpp
-	g++ -o cws cws.cpp -I./ -I../src/segmentor/ -L../lib/ -lsegmentor
+	g++ -o cws cws.cpp -I./ \
+		-I../src/segmentor/ \
+		-I../thirdparty/boost/include \
+		-L../lib/ -lsegmentor -lboost_regex_shiped
 
 pos: pos.cpp
 	g++ -o pos pos.cpp -I./ -I../src/postagger/ -L../lib/ -lpostagger
