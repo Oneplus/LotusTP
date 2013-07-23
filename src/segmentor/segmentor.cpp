@@ -212,8 +212,8 @@ void Segmentor::build_configuration(void) {
     for (SmartMap<bool>::const_iterator itx = wordfreq.begin();
             itx != wordfreq.end();
             ++ itx) {
-        //if (itx.frequency() >= target && strutils::codecs::length(itx.key()) > 1) {
-        if (itx.frequency() >= target) {
+        if (itx.frequency() >= target && strutils::codecs::length(itx.key()) > 1) {
+        // if (itx.frequency() >= target) {
             model->internal_lexicon.set(itx.key(), true);
         }
     }
