@@ -4,11 +4,17 @@
 
 int main(int argc, char * argv[]) {
     if (argc < 2) {
-        std::cerr << "cws [model path]" << std::endl;
+        std::cerr << "cws [model path] [lexicon_file]" << std::endl;
         return 1;
     }
 
-    void * engine = segmentor_create_segmentor(argv[1]);
+    void * engine = 0;
+    if (argc == 2) {
+        engine = segmentor_create_segmentor(argv[1]);
+    } else if (argc == 3) {
+        engine = segmentor_create_segmentor(argv[1], argv[2]);
+    }
+
     if (!engine) {
         return -1;
     }
