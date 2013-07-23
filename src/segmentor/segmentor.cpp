@@ -115,6 +115,7 @@ bool Segmentor::parse_cfg(ltp::utility::ConfigParser & cfg) {
 
     test_opt.test_file = "";
     test_opt.model_file = "";
+    test_opt.lexicon_file = "";
 
     if (cfg.has_section("test")) {
         __TEST__ = true;
@@ -131,6 +132,10 @@ bool Segmentor::parse_cfg(ltp::utility::ConfigParser & cfg) {
         } else {
             ERROR_LOG("model-file is not configed. ");
             return false;
+        }
+
+        if (cfg.get("test", "lexicon-file", strbuf)) {
+            test_opt.lexicon_file = strbuf;
         }
     }
 
@@ -567,6 +572,7 @@ void Segmentor::evaluate(void) {
 }
 
 void Segmentor::test(void) {
+    // load model
     const char * model_file = test_opt.model_file.c_str();
     ifstream mfs(model_file, std::ifstream::binary);
 
@@ -584,6 +590,19 @@ void Segmentor::test(void) {
     TRACE_LOG("Number of labels                 [%d]", model->num_labels());
     TRACE_LOG("Number of features               [%d]", model->space.num_features());
     TRACE_LOG("Number of dimension              [%d]", model->space.dim());
+
+    // load exteranl lexicon
+    const char * lexicon_file =test_opt.lexicon_file.c_str();
+    ifstream lfs(lexicon_file);
+    std::string buffer;
+    while (std::getline(lfs, buffer)) {
+        buffer = strutils::chomp(buffer);
+        if (buffer.size() == 0) {
+            continue;
+        }
+
+        model->external_lexicon.set(buffer.c_str(), true);
+    }
 
     const char * test_file = test_opt.test_file.c_str();
 
@@ -608,20 +627,6 @@ void Segmentor::test(void) {
     while ((inst = reader.next())) {
         int len = inst->size();
         inst->tagsidx.resize(len);
-
-        /*for (int i = 0; i < inst->size(); ++ i) {
-            std::cerr << inst->raw_forms[i] << "|";
-            if (i+1 == inst->size()) {std::cerr<<std::endl;}
-        }
-
-        for (int i = 0; i < inst->size(); ++ i) {
-            std::cerr << inst->forms[i] << "|";
-            if (i+1==inst->size()) {std::cerr<<std::endl;}
-        }
-        for (int i = 0; i < inst->size(); ++ i) {
-            std::cerr << (inst->chartypes[i]&0x07) << "|";
-            if (i+1==inst->size()) {std::cerr<<std::endl;}
-        }*/
 
         extract_features(inst);
         calculate_scores(inst, true);
