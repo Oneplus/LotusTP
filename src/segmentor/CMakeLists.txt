@@ -16,8 +16,7 @@ add_library (segmentor segment_dll.cpp ${segment_SRC})
 
 add_executable (otcws otcws.cpp ${segment_SRC})
 link_directories ( ${LIBRARY_OUTPUT_PATH} )
-target_link_libraries (otcws boost_regex_shiped)
-#target_link_libraries (otcws boost_regex)
+target_link_libraries (otcws boost_regex)
 
 # redirect the output binary to tools/train
 set_target_properties (otcws

@@ -292,7 +292,7 @@ void Segmentor::extract_features(Instance * inst, bool create) {
                 }
 
                 int idx = model->space.index(tid, cache[tid][itx]);
-                // std::cout << "key: " << cache[tid][itx] << " " << idx << std::endl;
+
                 if (idx >= 0) {
                     cache_again.push_back(idx);
                 }
