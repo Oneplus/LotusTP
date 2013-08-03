@@ -69,7 +69,7 @@ private:
     int beg_tag1;
 };
 
-void * ner_create_ner(const char * path) {
+void * ner_create_recognizer(const char * path) {
     NERWrapper * wrapper = new NERWrapper();
 
     if (!wrapper->load(path)) {
@@ -79,7 +79,7 @@ void * ner_create_ner(const char * path) {
     return reinterpret_cast<void *>(wrapper);
 }
 
-int ner_release_ner(void * ner) {
+int ner_release_recognizer(void * ner) {
     if (!ner) {
         return -1;
     }

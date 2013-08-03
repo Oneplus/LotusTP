@@ -23,7 +23,7 @@
  *  @param[in]  path    the path of the model
  *  @return     void *  the pointer to the segmentor
  */
-NER_DLL_API void * ner_create_ner(const char * path);
+NER_DLL_API void * ner_create_recognizer(const char * path);
 
 /*
  * release the segmentor resources
@@ -31,7 +31,7 @@ NER_DLL_API void * ner_create_ner(const char * path);
  *  @param[in]  segmentor   the segmentor
  *  @return     int         i don't know
  */
-NER_DLL_API int ner_release_ner(void * ner); 
+NER_DLL_API int ner_release_recognizer(void * ner); 
 
 /*
  * run segment on the given segmentor
