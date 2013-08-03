@@ -280,27 +280,47 @@ void NER::build_feature_space(void) {
     }
 }
 
-void NER::build_ner(Instance * inst,
+void NER::build_entities(Instance * inst,
         const std::vector<int> & tagsidx,
-        std::vector<std::string> & ne,
+        std::vector<std::string> & entities,
+        std::vector<std::string> & entities_tags,
         int beg_tag0,
-        int beg_tag1) {
+        int beg_tag1,
+        int beg_tag2) {
+    entities.clear();
+    entities_tags.clear();
+
     std::string entity = "";
+    std::string entity_tag = "";
     int len = inst->size();
+    int tag = -1;
+    int tag_prefix = -1;
+    int tag_suffix = -1;
 
     // should check the tagsidx size
     entity = inst->raw_forms[0];
+
+    tag = inst->tagsidx[0];
+    tag_suffix = tag % __num_ne_types__;
+    entity_tag = (tag == 12 ? "O" : __ne_types__[tag_suffix]);
     for (int i = 1; i < len; ++ i) {
-        int tag = tagsidx[i];
-        int tag_prefix = tag / __num_ne_types__;
-        if (tag_prefix == beg_tag0 || tag_prefix == beg_tag1) {
-            ne.push_back(entity);
+        tag = tagsidx[i];
+
+        tag_prefix = tag / __num_ne_types__;
+        tag_suffix = (tag % __num_ne_types__);
+
+        if (tag_prefix == beg_tag0 || tag_prefix == beg_tag1 || tag_prefix == beg_tag2) {
+            entities.push_back(entity);
+            entities_tags.push_back(entity_tag);
+
             entity = inst->raw_forms[i];
+            entity_tag = (tag == 12 ? "O" : __ne_types__[tag_suffix]);
         } else {
             entity += inst->raw_forms[i];
         }
     }
-    ne.push_back(entity);
+    entities.push_back(entity);
+    entities_tags.push_back(entity_tag);
 }
 
 void NER::calculate_scores(Instance * inst, bool use_avg) {
@@ -554,19 +574,24 @@ void NER::evaluate(void) {
     NERWriter writer(std::cout);
     Instance * inst = NULL;
 
-    int num_recalled_tags = 0;
-    int num_tags = 0;
+    // some dirty hard code and trick
+    int beg_tag0 = (model->labels.index( "B-Nh" ) / __num_ne_types__);
+    int beg_tag1 = (model->labels.index( "S-Nh" ) / __num_ne_types__);
+    int beg_tag2 = (model->labels.index( "O" ) / __num_ne_types__);
+
+
+    int num_recalled_entities = 0;
+    int num_predicted_entities = 0;
+    int num_gold_entities = 0;
 
     int L = model->num_labels();
 
+    int c = 0;
     while ((inst = reader.next())) {
         int len = inst->size();
         inst->tagsidx.resize(len);
         for (int i = 0; i < len; ++ i) {
             inst->tagsidx[i] = model->labels.index(inst->tags[i]);
-            if (inst->tagsidx[i] < 0) {
-                std::cerr << "!";
-            }
         }
 
         extract_features(inst);
@@ -574,16 +599,38 @@ void NER::evaluate(void) {
         decoder->decode(inst);
 
         // writer.debug(inst);
+        if (inst->entities.size() == 0) {
+            build_entities(inst, 
+                    inst->tagsidx, 
+                    inst->entities, 
+                    inst->entities_tags, 
+                    beg_tag0, 
+                    beg_tag1, 
+                    beg_tag2);
+        }
 
-        num_recalled_tags += inst->num_corrected_predicted_tags();
-        num_tags += inst->size();
+        build_entities(inst, 
+                inst->predicted_tagsidx, 
+                inst->predicted_entities,
+                inst->predicted_entities_tags, 
+                beg_tag0, 
+                beg_tag1,
+                beg_tag2);
+
+        num_recalled_entities += inst->num_recalled_entites();
+        num_predicted_entities += inst->num_predicted_entities();
+        num_gold_entities += inst->num_gold_entities();
 
         delete inst;
     }
 
-    double p = (double)num_recalled_tags / num_tags;
+    double p = (double)num_recalled_entities / num_predicted_entities;
+    double r = (double)num_recalled_entities / num_gold_entities;
+    double f = 2 * p * r / (p + r);
 
-    TRACE_LOG("P: %lf ( %d / %d )", p, num_recalled_tags, num_tags);
+    TRACE_LOG("P: %lf ( %d / %d )", p, num_recalled_entities, num_predicted_entities);
+    TRACE_LOG("R: %lf ( %d / %d )", r, num_recalled_entities, num_gold_entities);
+    TRACE_LOG("F: %lf" , f); 
     return;
 }
 

@@ -78,11 +78,13 @@ protected:
      *  @param[in]      begtag0 first of the word begin tag
      *  @param[in]      begtag1 second of the word begin tag
      */
-    void build_ner(Instance * inst, 
+    void build_entities(Instance * inst, 
             const std::vector<int> & tagsidx,
-            std::vector<std::string> & ne,
+            std::vector<std::string> & entities,
+            std::vector<std::string> & entities_tags,
             int beg_tag0,
-            int beg_tag1 = -1);
+            int beg_tag1,
+            int beg_tag2);
 
     /*
      * cache all the score for the certain instance.
