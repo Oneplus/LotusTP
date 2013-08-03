@@ -12,7 +12,7 @@ set (ner_SRC
     extractor.cpp
     ner.cpp)
 
-#add_library (ner ner_dll.cpp ${ner_SRC})
+add_library (ner ner_dll.cpp ${ner_SRC})
 
 add_executable (otner otner.cpp ${ner_SRC})
 link_directories ( ${LIBRARY_OUTPUT_PATH} )

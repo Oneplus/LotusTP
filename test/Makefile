@@ -1,4 +1,4 @@
-all: cws pos par
+all: cws pos par ner
 
 cws: cws.cpp
 	g++ -o cws cws.cpp -I./ \
@@ -9,6 +9,9 @@ cws: cws.cpp
 pos: pos.cpp
 	g++ -o pos pos.cpp -I./ -I../src/postagger/ -L../lib/ -lpostagger
 
+ner: ner.cpp
+	g++ -o ner ner.cpp -I./ -I../src/ner/ -L../lib -lner
+
 par: par.cpp
 	g++ -o par par.cpp -I./ -I../src/parser/ -L../lib -lparser
 
@@ -17,4 +20,5 @@ par: par.cpp
 clean:
 	rm cws
 	rm pos
+	rm ner
 	rm par

@@ -24,7 +24,7 @@ public:
             return false;
         }
 
-        model = new ltp::segmentor::Model;
+        model = new ltp::ner::Model;
         if (!model->load(mfs)) {
             delete model;
             return false;
@@ -43,11 +43,22 @@ public:
             const std::vector<std::string> & postags,
             std::vector<std::string> & tags) {
         ltp::ner::Instance * inst = new ltp::ner::Instance;
-        // ltp::strutils::codecs::decode(str, inst->forms);
+        if (words.size() != postags.size()) {
+            return 0;
+        }
+
+        for (int i = 0; i < words.size(); ++ i) {
+            inst->forms.push_back(ltp::strutils::chartypes::sbc2dbc_x(words[i]));
+            inst->postags.push_back(postags[i]);
+        }
 
         ltp::ner::NER::extract_features(inst);
         ltp::ner::NER::calculate_scores(inst, true);
         decoder->decode(inst);
+
+        for (int i = 0; i < words.size(); ++ i) {
+            tags.push_back(model->labels.at(inst->predicted_tagsidx[i]));
+        }
 
         delete inst;
         return tags.size();

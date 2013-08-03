@@ -23,7 +23,7 @@
  *  @param[in]  path    the path of the model
  *  @return     void *  the pointer to the segmentor
  */
-NER_DLL_API void * ner_create_ner(const char * path, const char * lexicon_file = NULL);
+NER_DLL_API void * ner_create_ner(const char * path);
 
 /*
  * release the segmentor resources
