@@ -9,7 +9,7 @@ int main(int argc, char * argv[]) {
         return -1;
     }
 
-    void * engine = ner_create_ner(argv[1]);
+    void * engine = ner_create_recognizer(argv[1]);
     if (!engine) {
         std::cerr << "failed to load model" << std::endl;
         return -1;
@@ -37,7 +37,7 @@ int main(int argc, char * argv[]) {
         std::cout << words[i] << "\t" << postags[i] << "\t" << tags[i] << std::endl;
     }
 
-    ner_release_ner(engine);
+    ner_release_recognizer(engine);
     return 0;
 }
 
