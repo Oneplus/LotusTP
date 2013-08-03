@@ -74,7 +74,11 @@ public:
 
         for (int i = 0; i < len; ++ i) {
             ofs << inst->forms[i] << "/" << inst->predicted_tags[i];
-            ofs << (i + 1 < len ? "\t" : "\n");
+            if (i + 1 < len ) {
+                ofs << "\t";
+            } else {
+                ofs << std::endl;
+            }
         }
     }
 
